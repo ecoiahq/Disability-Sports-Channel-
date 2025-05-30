@@ -13,7 +13,7 @@ export const metadata = {
 
 export default function AdvertisePage() {
   return (
-    <div className="flex min-h-screen flex-col bg-black text-white">
+    <div className="flex min-h-screen flex-col bg-black text-white" id="top">
       <SiteHeader />
       <main className="flex-1">
         {/* Hero Section */}

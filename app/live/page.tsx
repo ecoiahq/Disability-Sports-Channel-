@@ -101,6 +101,7 @@ export default function LivePage() {
     },
   ])
   const [chatInput, setChatInput] = useState("")
+  const [chatUsername, setChatUsername] = useState("")
 
   // Simulate increasing view count
   useEffect(() => {
@@ -118,7 +119,7 @@ export default function LivePage() {
 
     const newMessage = {
       id: chatMessages.length + 1,
-      user: "You",
+      user: chatUsername || "You",
       color: "text-white",
       message: chatInput,
       time: "just now",
@@ -126,6 +127,7 @@ export default function LivePage() {
 
     setChatMessages((prev) => [...prev, newMessage])
     setChatInput("")
+    setChatUsername("")
   }
 
   return (
@@ -320,14 +322,6 @@ export default function LivePage() {
                         LIVE
                       </div>
 
-                      {/* Viewers Count */}
-                      <div className="absolute top-4 right-4 rounded bg-black/70 px-2 py-1 text-xs font-medium">
-                        <div className="flex items-center gap-1">
-                          <Users className="h-3 w-3" />
-                          <span>{viewCount.toLocaleString()} watching</span>
-                        </div>
-                      </div>
-
                       {/* Quality Badge */}
                       <div className="absolute top-12 right-4 rounded bg-black/70 px-2 py-1 text-xs font-medium">
                         <div className="flex items-center gap-1">
@@ -471,20 +465,30 @@ export default function LivePage() {
                                 ))}
                               </div>
                             </div>
-                            <form onSubmit={handleChatSubmit} className="mt-4 flex gap-2">
+                            <form onSubmit={handleChatSubmit} className="mt-4 space-y-2">
                               <input
                                 type="text"
-                                placeholder="Type a message..."
-                                className="flex-1 rounded bg-gray-900 px-3 py-2 text-white focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                value={chatInput}
-                                onChange={(e) => setChatInput(e.target.value)}
+                                placeholder="Enter your username..."
+                                className="w-full rounded bg-gray-900 px-3 py-2 text-white focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                value={chatUsername}
+                                onChange={(e) => setChatUsername(e.target.value)}
+                                required
                               />
-                              <Button
-                                type="submit"
-                                className="bg-teal-600 text-white hover:bg-teal-700 whitespace-nowrap"
-                              >
-                                Send
-                              </Button>
+                              <div className="flex gap-2">
+                                <input
+                                  type="text"
+                                  placeholder="Type a message..."
+                                  className="flex-1 rounded bg-gray-900 px-3 py-2 text-white focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                  value={chatInput}
+                                  onChange={(e) => setChatInput(e.target.value)}
+                                />
+                                <Button
+                                  type="submit"
+                                  className="bg-teal-600 text-white hover:bg-teal-700 whitespace-nowrap"
+                                >
+                                  Send
+                                </Button>
+                              </div>
                             </form>
                           </TabsContent>
                           <TabsContent value="stats" className="rounded-b-lg bg-gray-800 p-4">
@@ -752,7 +756,7 @@ export default function LivePage() {
                               />
                               <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
                                 <Image
-                                  src="/placeholder.svg?height=180&width=320&query=play%20button%20overlay"
+                                  src="/placeholder.svg?height=180&width=320"
                                   alt="Play overlay"
                                   fill
                                   className="object-cover opacity-40"
@@ -795,7 +799,7 @@ export default function LivePage() {
                               />
                               <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
                                 <Image
-                                  src="/placeholder.svg?height=180&width=320&query=play%20button%20overlay"
+                                  src="/placeholder.svg?height=180&width=320"
                                   alt="Play overlay"
                                   fill
                                   className="object-cover opacity-40"
@@ -851,7 +855,7 @@ export default function LivePage() {
                       />
                       <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity hover:opacity-100">
                         <Image
-                          src="/placeholder.svg?height=180&width=320&query=play%20button%20overlay"
+                          src="/placeholder.svg?height=180&width=320"
                           alt="Play overlay"
                           fill
                           className="object-cover opacity-40"

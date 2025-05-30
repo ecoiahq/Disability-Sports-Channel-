@@ -516,6 +516,405 @@ const sportsData: SportInfo[] = [
     classification:
       "Para swimming uses an 'S' prefix for freestyle, backstroke, and butterfly events, 'SB' for breaststroke, and 'SM' for individual medley, followed by a number from 1-14. Lower numbers (S1-S10) indicate physical impairments with severity decreasing as numbers increase, S11-S13 indicate visual impairments, and S14 indicates intellectual impairment.",
   },
+  {
+    id: "para-archery",
+    name: "Para Archery",
+    slug: "para-archery",
+    description:
+      "Para archery is a precision sport that tests accuracy, focus, and mental strength. Athletes with physical impairments compete using recurve and compound bows.",
+    coverImage: "/para-archery-competition.png",
+    timeline: [
+      {
+        year: "1948",
+        event: "Therapeutic Origins",
+        description: "Archery was first used as a form of rehabilitation therapy at Stoke Mandeville Hospital.",
+      },
+    ],
+    rules: [
+      {
+        title: "Equipment",
+        content:
+          "Athletes use recurve or compound bows with various assistive devices allowed based on classification.",
+      },
+    ],
+    pointSystem: "Individual competition with elimination rounds leading to medal matches.",
+    classification: "Athletes compete in Open, W1 (wheelchair), and VI (visually impaired) categories.",
+  },
+  {
+    id: "para-badminton",
+    name: "Para Badminton",
+    slug: "para-badminton",
+    description:
+      "Para badminton made its Paralympic debut at Tokyo 2020. The sport features fast-paced action with athletes competing in wheelchair and standing classifications.",
+    coverImage: "/para-badminton-action.png",
+    timeline: [
+      {
+        year: "2020",
+        event: "Paralympic Debut",
+        description: "Para badminton made its Paralympic debut at the Tokyo 2020 Games.",
+      },
+    ],
+    rules: [
+      {
+        title: "Court Modifications",
+        content: "Wheelchair players compete on a shorter court with modified service rules.",
+      },
+    ],
+    pointSystem: "Standard badminton scoring system with matches played to best of three games.",
+    classification:
+      "Six sport classes: WH1, WH2 (wheelchair), SL3, SL4 (standing lower limb), SU5 (standing upper limb), SS6 (short stature).",
+  },
+  {
+    id: "boccia",
+    name: "Boccia",
+    slug: "boccia",
+    description:
+      "Boccia is a precision ball sport designed specifically for athletes with severe physical disabilities. It requires strategy, accuracy, and concentration.",
+    coverImage: "/boccia-competition.png",
+    timeline: [
+      {
+        year: "1984",
+        event: "Paralympic Debut",
+        description: "Boccia was included in the Paralympic Games for the first time in New York/Stoke Mandeville.",
+      },
+    ],
+    rules: [
+      {
+        title: "Objective",
+        content: "Players aim to throw leather balls as close as possible to a white target ball called the jack.",
+      },
+    ],
+    pointSystem: "Points awarded based on proximity to the jack, with closest balls scoring.",
+    classification: "Four sport classes: BC1, BC2, BC3, and BC4, based on functional ability.",
+  },
+  {
+    id: "para-canoe",
+    name: "Para Canoe",
+    slug: "para-canoe",
+    description:
+      "Para canoe sprint made its Paralympic debut at Rio 2016. Athletes compete in kayaks over 200m distances with classifications based on functional ability.",
+    coverImage: "/para-canoe-sprint.png",
+    timeline: [
+      {
+        year: "2016",
+        event: "Paralympic Debut",
+        description: "Para canoe sprint was included in the Paralympic Games for the first time in Rio.",
+      },
+    ],
+    rules: [
+      {
+        title: "Distance",
+        content: "All Paralympic events are contested over 200 meters in kayaks.",
+      },
+    ],
+    pointSystem: "Time-based competition with fastest times advancing through heats to finals.",
+    classification: "Three sport classes: KL1, KL2, and KL3, based on trunk function and leg function.",
+  },
+  {
+    id: "para-cycling",
+    name: "Para Cycling",
+    slug: "para-cycling",
+    description:
+      "Para cycling includes road and track events for athletes with physical impairments using bicycles, tricycles, handcycles, and tandems for visually impaired athletes.",
+    coverImage: "/para-cycling-race.png",
+    timeline: [
+      {
+        year: "1984",
+        event: "Paralympic Debut",
+        description: "Cycling for athletes with disabilities made its first appearance at the Paralympic Games.",
+      },
+    ],
+    rules: [
+      {
+        title: "Equipment Categories",
+        content:
+          "Athletes compete using bicycles, tricycles, handcycles, or tandems depending on their classification.",
+      },
+    ],
+    pointSystem: "Time-based competition for road events, with various formats for track events.",
+    classification: "Multiple classes including C1-C5 (bicycle), T1-T2 (tricycle), H1-H5 (handcycle), and B (tandem).",
+  },
+  {
+    id: "para-equestrian",
+    name: "Para Equestrian",
+    slug: "para-equestrian",
+    description:
+      "Para equestrian dressage showcases the harmony between horse and rider. Athletes with physical impairments compete in dressage tests of varying complexity.",
+    coverImage: "/para-equestrian-dressage.png",
+    timeline: [
+      {
+        year: "1996",
+        event: "Paralympic Debut",
+        description: "Para equestrian dressage was included in the Paralympic Games for the first time in Atlanta.",
+      },
+    ],
+    rules: [
+      {
+        title: "Dressage Tests",
+        content:
+          "Athletes perform predetermined sequences of movements that demonstrate horse training and rider skill.",
+      },
+    ],
+    pointSystem: "Percentage scoring system based on execution of movements and overall harmony.",
+    classification: "Five grades: Grade I (most severe impairment) to Grade V (least severe impairment).",
+  },
+  {
+    id: "football-5-a-side",
+    name: "Football 5-a-side",
+    slug: "football-5-a-side",
+    description:
+      "Football 5-a-side is played by athletes with visual impairments. The ball contains ball bearings to make noise, and matches are played in complete silence from spectators.",
+    coverImage: "/football-5-a-side-match.png",
+    timeline: [
+      {
+        year: "2004",
+        event: "Paralympic Debut",
+        description: "Football 5-a-side was included in the Paralympic Games for the first time in Athens.",
+      },
+    ],
+    rules: [
+      {
+        title: "Sound Ball",
+        content: "The ball contains ball bearings that make noise to help players locate it during play.",
+      },
+    ],
+    pointSystem: "Standard football scoring with matches played over two 25-minute halves.",
+    classification: "All outfield players must be classified as B1 (totally or almost totally blind).",
+  },
+  {
+    id: "goalball",
+    name: "Goalball",
+    slug: "goalball",
+    description:
+      "Goalball was created specifically for athletes with visual impairments. Teams try to score by rolling a ball with bells into the opponent's goal.",
+    coverImage: "/goalball-competition.png",
+    timeline: [
+      {
+        year: "1976",
+        event: "Paralympic Debut",
+        description: "Goalball was included in the Paralympic Games for the first time in Toronto.",
+      },
+    ],
+    rules: [
+      {
+        title: "Silent Game",
+        content: "Spectators must remain completely silent during play so athletes can hear the ball.",
+      },
+    ],
+    pointSystem:
+      "Goals scored by rolling the ball into the opponent's goal, with matches played over two 12-minute halves.",
+    classification: "All players compete in the B1-B3 classifications and wear eyeshades for fairness.",
+  },
+  {
+    id: "para-judo",
+    name: "Para Judo",
+    slug: "para-judo",
+    description:
+      "Para judo is practiced by athletes with visual impairments. The sport follows the same rules as Olympic judo with minor modifications for safety and fairness.",
+    coverImage: "/para-judo-match.png",
+    timeline: [
+      {
+        year: "1988",
+        event: "Paralympic Debut",
+        description: "Para judo was included in the Paralympic Games for the first time in Seoul.",
+      },
+    ],
+    rules: [
+      {
+        title: "Starting Position",
+        content: "Athletes start each contest in contact with each other to compensate for visual impairment.",
+      },
+    ],
+    pointSystem: "Standard judo scoring system with ippon, waza-ari, and penalties.",
+    classification: "Three classes: J1 (no light perception), J2 (light perception), and J3 (visual field restricted).",
+  },
+  {
+    id: "para-powerlifting",
+    name: "Para Powerlifting",
+    slug: "para-powerlifting",
+    description:
+      "Para powerlifting is the ultimate test of upper body strength. Athletes compete in the bench press, with the winner determined by the highest weight lifted.",
+    coverImage: "/para-powerlifting-bench.png",
+    timeline: [
+      {
+        year: "1964",
+        event: "Paralympic Debut",
+        description: "Powerlifting was included in the Paralympic Games for the first time in Tokyo.",
+      },
+    ],
+    rules: [
+      {
+        title: "Bench Press Only",
+        content: "Athletes compete only in the bench press, lying on a bench and pressing the barbell.",
+      },
+    ],
+    pointSystem: "Highest successful lift wins, with bodyweight categories for fair competition.",
+    classification: "Single sport class with athletes competing in bodyweight categories.",
+  },
+  {
+    id: "para-rowing",
+    name: "Para Rowing",
+    slug: "para-rowing",
+    description:
+      "Para rowing tests endurance, technique, and teamwork. Athletes with physical impairments compete in single sculls, double sculls, and mixed coxed four events.",
+    coverImage: "/para-rowing-race.png",
+    timeline: [
+      {
+        year: "2008",
+        event: "Paralympic Debut",
+        description: "Para rowing was included in the Paralympic Games for the first time in Beijing.",
+      },
+    ],
+    rules: [
+      {
+        title: "Race Distance",
+        content: "All Paralympic rowing events are contested over 1000 meters.",
+      },
+    ],
+    pointSystem: "Time-based competition with fastest crews advancing through heats to finals.",
+    classification:
+      "Three sport classes: PR1 (arms and shoulders only), PR2 (trunk and arms), PR3 (legs, trunk and arms with remaining function).",
+  },
+  {
+    id: "para-shooting",
+    name: "Para Shooting",
+    slug: "para-shooting",
+    description:
+      "Para shooting is a precision sport requiring exceptional concentration and control. Athletes compete in rifle and pistol events from standing, prone, or seated positions.",
+    coverImage: "/para-shooting-competition.png",
+    timeline: [
+      {
+        year: "1976",
+        event: "Paralympic Debut",
+        description: "Shooting was included in the Paralympic Games for the first time in Toronto.",
+      },
+    ],
+    rules: [
+      {
+        title: "Precision Scoring",
+        content:
+          "Athletes aim for the highest score possible with shots scored from 1-10 points based on proximity to center.",
+      },
+    ],
+    pointSystem: "Cumulative scoring system with qualification rounds leading to elimination finals.",
+    classification: "Two main classes: SH1 (pistol and rifle) and SH2 (rifle only with shooting stand support).",
+  },
+  {
+    id: "sitting-volleyball",
+    name: "Sitting Volleyball",
+    slug: "sitting-volleyball",
+    description:
+      "Sitting volleyball is a fast-paced Paralympic sport adapted for athletes with physical impairments, played on a smaller court with a lower net.",
+    coverImage: "/sitting-volleyball-match.png",
+    timeline: [
+      {
+        year: "1980",
+        event: "Paralympic Debut",
+        description: "Sitting volleyball was included in the Paralympic Games for the first time in Arnhem.",
+      },
+    ],
+    rules: [
+      {
+        title: "Court Contact",
+        content: "Players must maintain contact between their pelvis and the court when playing the ball.",
+      },
+    ],
+    pointSystem: "Standard volleyball scoring with matches played to best of five sets.",
+    classification: "Two classes: VS1 (more severe impairment) and VS2 (less severe impairment).",
+  },
+  {
+    id: "para-table-tennis",
+    name: "Para Table Tennis",
+    slug: "para-table-tennis",
+    description:
+      "Para table tennis is one of the most popular Paralympic sports, featuring fast-paced action for athletes with physical and intellectual impairments.",
+    coverImage: "/para-table-tennis-action.png",
+    timeline: [
+      {
+        year: "1960",
+        event: "Paralympic Debut",
+        description: "Table tennis was included in the Paralympic Games for the first time in Rome.",
+      },
+    ],
+    rules: [
+      {
+        title: "Serving Rules",
+        content: "Modified serving rules apply for wheelchair players, including service from behind the end line.",
+      },
+    ],
+    pointSystem: "Standard table tennis scoring with matches played to best of five or seven games.",
+    classification: "Eleven classes: 1-5 (wheelchair), 6-10 (standing), and 11 (intellectual impairment).",
+  },
+  {
+    id: "para-taekwondo",
+    name: "Para Taekwondo",
+    slug: "para-taekwondo",
+    description:
+      "Para taekwondo made its Paralympic debut at Rio 2016. Athletes with arm impairments compete in this dynamic combat sport focusing on kicks and footwork.",
+    coverImage: "/para-taekwondo-match.png",
+    timeline: [
+      {
+        year: "2016",
+        event: "Paralympic Debut",
+        description: "Para taekwondo was included in the Paralympic Games for the first time in Rio.",
+      },
+    ],
+    rules: [
+      {
+        title: "Kyorugi Competition",
+        content: "Athletes compete in full-contact sparring matches with electronic scoring systems.",
+      },
+    ],
+    pointSystem: "Point-based system with kicks to the body and head scoring different values.",
+    classification: "Two sport classes: K44 (one arm impairment) and K43 (both arms affected).",
+  },
+  {
+    id: "wheelchair-rugby",
+    name: "Wheelchair Rugby",
+    slug: "wheelchair-rugby",
+    description:
+      "Originally called 'murderball', wheelchair rugby is a high-impact sport for athletes with impairments affecting both arms and legs.",
+    coverImage: "/wheelchair-rugby-action.png",
+    timeline: [
+      {
+        year: "2000",
+        event: "Paralympic Debut",
+        description: "Wheelchair rugby became a full medal event at the Sydney Paralympic Games.",
+      },
+    ],
+    rules: [
+      {
+        title: "Mixed Gender",
+        content: "Teams can include both male and female players, with specific rules for gender inclusion.",
+      },
+    ],
+    pointSystem: "Teams must field players whose total classification points do not exceed 8.0 points.",
+    classification: "Players classified from 0.5 to 3.5 points based on functional ability in trunk and upper limbs.",
+  },
+  {
+    id: "wheelchair-tennis",
+    name: "Wheelchair Tennis",
+    slug: "wheelchair-tennis",
+    description:
+      "Wheelchair tennis follows the same rules as able-bodied tennis, except the ball is allowed to bounce twice before being returned.",
+    coverImage: "/wheelchair-tennis-match.png",
+    timeline: [
+      {
+        year: "1992",
+        event: "Paralympic Debut",
+        description: "Wheelchair tennis was included in the Paralympic Games for the first time in Barcelona.",
+      },
+    ],
+    rules: [
+      {
+        title: "Two-Bounce Rule",
+        content: "The ball is allowed to bounce twice, with the second bounce allowed to be outside the court.",
+      },
+    ],
+    pointSystem: "Standard tennis scoring system with matches played to best of three sets.",
+    classification:
+      "Two divisions: Open (for athletes with permanent mobility-related physical disabilities) and Quad (for athletes with additional arm/hand function limitations).",
+  },
 ]
 
 // Add timeline data to the sports array
@@ -690,7 +1089,7 @@ const sports: Sport[] = [
     slug: "sitting-volleyball",
     description:
       "Sitting volleyball is a fast-paced Paralympic sport adapted for athletes with physical impairments, played on a smaller court with a lower net.",
-    coverImage: "/abstract-geometric-shapes.png",
+    coverImage: "/sitting-volleyball-match.png",
     historyTimeline: [
       {
         year: "1956",
@@ -744,7 +1143,7 @@ const sports: Sport[] = [
     slug: "wheelchair-rugby",
     description:
       "Originally called 'murderball', wheelchair rugby is a high-impact sport for athletes with impairments affecting both arms and legs.",
-    coverImage: "/abstract-geometric-shapes.png",
+    coverImage: "/wheelchair-rugby-action.png",
     historyTimeline: [
       {
         year: "1977",
@@ -798,7 +1197,7 @@ const sports: Sport[] = [
     slug: "para-cycling",
     description:
       "Para cycling includes road and track events for athletes with physical impairments using bicycles, tricycles, handcycles, and tandems.",
-    coverImage: "/abstract-geometric-shapes.png",
+    coverImage: "/para-cycling-race.png",
     historyTimeline: [
       {
         year: "1984",

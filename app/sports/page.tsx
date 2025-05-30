@@ -75,37 +75,6 @@ export default function SportsPage() {
             </div>
           </div>
         </section>
-
-        {/* Coming Soon Section */}
-        <section className="border-t border-gray-800 py-12">
-          <div className="container px-4 md:px-6">
-            <h2 className="mb-8 text-2xl font-bold">Coming Soon</h2>
-            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
-              {["Sitting Volleyball", "Wheelchair Rugby", "Para Cycling", "Boccia"].map((sport, index) => (
-                <div key={index} className="overflow-hidden rounded-lg bg-gray-900">
-                  <div className="relative">
-                    <Image
-                      src={`/abstract-geometric-shapes.png?height=400&width=600&query=${sport.toLowerCase()} para sport`}
-                      alt={sport}
-                      width={600}
-                      height={340}
-                      className="aspect-video object-cover"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
-                    <div className="absolute bottom-0 left-0 p-4">
-                      <h3 className="text-lg font-bold text-white">{sport}</h3>
-                    </div>
-                  </div>
-                  <div className="p-4">
-                    <div className="inline-block rounded-full bg-gray-800 px-3 py-1 text-xs font-medium text-teal-400">
-                      Coming Soon
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
       </main>
       <EnhancedFooter />
     </div>

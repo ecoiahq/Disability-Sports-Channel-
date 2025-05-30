@@ -1060,7 +1060,7 @@ export default function SummitPage() {
               >
                 <PricingTier
                   tier="PLATINUM"
-                  price="£1500"
+                  price="£2000"
                   features={[
                     "Everything in Gold",
                     "Sponsor recognition at the event",
@@ -1186,7 +1186,7 @@ export default function SummitPage() {
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="platinum" id="platinum" className="text-teal-500" />
                         <Label htmlFor="platinum" className="font-normal">
-                          Platinum (£1500)
+                          Platinum (£2000)
                         </Label>
                       </div>
                     </RadioGroup>

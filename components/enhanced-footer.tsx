@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { Facebook, Twitter, Youtube, Instagram, Mail } from "lucide-react"
+import { Facebook, Twitter, Youtube, Instagram } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 
@@ -19,6 +19,8 @@ export default function EnhancedFooter() {
             <Link
               href="https://www.facebook.com/disabilitysportschannel"
               className="rounded-full bg-gray-800 p-2 text-white hover:bg-teal-600"
+              target="_blank"
+              rel="noopener noreferrer"
             >
               <Facebook className="h-5 w-5" />
               <span className="sr-only">Facebook</span>
@@ -26,6 +28,8 @@ export default function EnhancedFooter() {
             <Link
               href="https://x.com/dschanneluk"
               className="rounded-full bg-gray-800 p-2 text-white hover:bg-teal-600"
+              target="_blank"
+              rel="noopener noreferrer"
             >
               <Twitter className="h-5 w-5" />
               <span className="sr-only">Twitter</span>
@@ -33,6 +37,8 @@ export default function EnhancedFooter() {
             <Link
               href="https://www.youtube.com/@disabilitysportschannel"
               className="rounded-full bg-gray-800 p-2 text-white hover:bg-teal-600"
+              target="_blank"
+              rel="noopener noreferrer"
             >
               <Youtube className="h-5 w-5" />
               <span className="sr-only">YouTube</span>
@@ -40,16 +46,12 @@ export default function EnhancedFooter() {
             <Link
               href="https://www.instagram.com/disability_sports_channel/"
               className="rounded-full bg-gray-800 p-2 text-white hover:bg-teal-600"
+              target="_blank"
+              rel="noopener noreferrer"
             >
               <Instagram className="h-5 w-5" />
               <span className="sr-only">Instagram</span>
             </Link>
-          </div>
-          <div className="mt-4 flex items-center gap-2 text-sm">
-            <Mail className="h-4 w-4 text-teal-400" />
-            <a href="mailto:contact@disabilitysportschannel.co.uk" className="hover:text-teal-400">
-              contact@disabilitysportschannel.co.uk
-            </a>
           </div>
         </div>
 
@@ -63,22 +65,12 @@ export default function EnhancedFooter() {
               </Link>
             </li>
             <li>
-              <Link href="/careers" className="hover:text-teal-400">
-                Careers
-              </Link>
-            </li>
-            <li>
-              <Link href="/contact" className="hover:text-teal-400">
+              <Link href="/contact" className="hover:text-teal-400" scroll={true}>
                 Contact Us
               </Link>
             </li>
             <li>
-              <Link href="/partners" className="hover:text-teal-400">
-                Partners
-              </Link>
-            </li>
-            <li>
-              <Link href="/advertise" className="hover:text-teal-400">
+              <Link href="/advertise" className="hover:text-teal-400" scroll={true}>
                 Advertise
               </Link>
             </li>
@@ -90,27 +82,22 @@ export default function EnhancedFooter() {
           <h3 className="mb-4 text-lg font-medium text-teal-400">Content</h3>
           <ul className="space-y-2 text-sm">
             <li>
-              <Link href="/news" className="hover:text-teal-400">
+              <Link href="/news" className="hover:text-teal-400" scroll={true}>
                 News
               </Link>
             </li>
             <li>
-              <Link href="/sports" className="hover:text-teal-400">
+              <Link href="/sports" className="hover:text-teal-400" scroll={true}>
                 Sports
               </Link>
             </li>
             <li>
-              <Link href="/studios" className="hover:text-teal-400">
+              <Link href="/studios" className="hover:text-teal-400" scroll={true}>
                 DSC Studios
               </Link>
             </li>
             <li>
-              <Link href="/podcasts" className="hover:text-teal-400">
-                Para Sport Talks
-              </Link>
-            </li>
-            <li>
-              <Link href="/summit" className="hover:text-teal-400">
+              <Link href="/summit" className="hover:text-teal-400" scroll={true}>
                 2025 Summit
               </Link>
             </li>
@@ -122,12 +109,12 @@ export default function EnhancedFooter() {
           <h3 className="mb-4 text-lg font-medium text-teal-400">Support</h3>
           <ul className="space-y-2 text-sm">
             <li>
-              <Link href="/terms" className="hover:text-teal-400">
+              <Link href="/terms" className="hover:text-teal-400" scroll={true}>
                 Terms of Service
               </Link>
             </li>
             <li>
-              <Link href="/privacy" className="hover:text-teal-400">
+              <Link href="/privacy" className="hover:text-teal-400" scroll={true}>
                 Privacy Policy
               </Link>
             </li>
