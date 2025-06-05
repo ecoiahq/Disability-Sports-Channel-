@@ -1,167 +1,86 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState } from "react"
 import { motion } from "framer-motion"
 import { ChevronDown, ChevronUp } from "lucide-react"
-import type { TimelineEvent } from "@/lib/sports-data"
+
+interface TimelineEvent {
+  year: string
+  title: string
+  description: string
+}
 
 interface SportHistoryTimelineProps {
-  timeline: TimelineEvent[]
+  events: TimelineEvent[]
+  subtitle?: string
 }
 
-export default function SportHistoryTimeline({ timeline }: SportHistoryTimelineProps) {
-  return (
-    <div className="relative space-y-8 py-6 before:absolute before:inset-0 before:ml-5 before:h-full before:border-l-2 before:border-gray-700 before:content-[''] md:before:mx-auto md:before:right-0 md:before:border-l-0 md:before:border-r-0">
-      {timeline.map((item, index) => (
-        <TimelineItem key={index} item={item} index={index} />
-      ))}
-    </div>
-  )
-}
+export default function SportHistoryTimeline({ events, subtitle }: SportHistoryTimelineProps) {
+  const [expandedItems, setExpandedItems] = useState<Set<number>>(new Set())
 
-interface TimelineItemProps {
-  item: TimelineEvent
-  index: number
-}
-
-function TimelineItem({ item, index }: TimelineItemProps) {
-  const [isExpanded, setIsExpanded] = useState(false)
-  const [isVisible, setIsVisible] = useState(false)
-  const itemRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          setIsVisible(true)
-          observer.disconnect()
-        }
-      },
-      { threshold: 0.2 },
-    )
-
-    if (itemRef.current) {
-      observer.observe(itemRef.current)
+  const toggleExpanded = (index: number) => {
+    const newExpanded = new Set(expandedItems)
+    if (newExpanded.has(index)) {
+      newExpanded.delete(index)
+    } else {
+      newExpanded.add(index)
     }
-
-    return () => {
-      observer.disconnect()
-    }
-  }, [])
-
-  // Determine if this is a major milestone event
-  const isMajorEvent =
-    item.title.toLowerCase().includes("paralympic") ||
-    item.title.toLowerCase().includes("world championship") ||
-    item.title.toLowerCase().includes("origins")
-
-  // Variants for animations
-  const containerVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.5,
-        delay: index * 0.2, // Stagger the animations
-      },
-    },
-  }
-
-  const circleVariants = {
-    hidden: { scale: 0 },
-    visible: {
-      scale: 1,
-      transition: {
-        type: "spring",
-        stiffness: 300,
-        damping: 15,
-        delay: index * 0.2 + 0.2,
-      },
-    },
-  }
-
-  const contentVariants = {
-    hidden: { opacity: 0, x: index % 2 === 0 ? 20 : -20 },
-    visible: {
-      opacity: 1,
-      x: 0,
-      transition: {
-        duration: 0.5,
-        delay: index * 0.2 + 0.3,
-      },
-    },
-  }
-
-  const expandVariants = {
-    collapsed: { height: 0, opacity: 0 },
-    expanded: {
-      height: "auto",
-      opacity: 1,
-      transition: {
-        height: {
-          duration: 0.3,
-        },
-        opacity: {
-          duration: 0.3,
-        },
-      },
-    },
+    setExpandedItems(newExpanded)
   }
 
   return (
-    <motion.div
-      ref={itemRef}
-      className={`relative flex flex-col items-start gap-3 md:flex-row md:gap-6 ${
-        index % 2 === 0 ? "md:flex-row-reverse" : ""
-      }`}
-      initial="hidden"
-      animate={isVisible ? "visible" : "hidden"}
-      variants={containerVariants}
-    >
-      <motion.div
-        className={`flex h-10 w-10 flex-none items-center justify-center rounded-full ${
-          isMajorEvent ? "bg-teal-600" : "bg-gray-700"
-        } text-white shadow-md md:order-1 hover:scale-110 transition-transform cursor-pointer`}
-        variants={circleVariants}
-        onClick={() => setIsExpanded(!isExpanded)}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.95 }}
-      >
-        <span className="font-bold">{item.year}</span>
-      </motion.div>
-
-      <motion.div
-        className="flex-grow rounded-lg bg-gray-900 p-4 shadow-md hover:bg-gray-800 transition-colors cursor-pointer"
-        variants={contentVariants}
-        onClick={() => setIsExpanded(!isExpanded)}
-      >
-        <div className="flex items-center justify-between">
-          <h3 className={`mb-1 text-lg font-bold ${isMajorEvent ? "text-teal-400" : "text-gray-300"}`}>{item.title}</h3>
-          <button
-            className="text-gray-400 hover:text-teal-400 transition-colors"
-            onClick={(e) => {
-              e.stopPropagation()
-              setIsExpanded(!isExpanded)
-            }}
-          >
-            {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-          </button>
+    <section className="bg-gray-950 py-16">
+      <div className="container mx-auto px-4 md:px-6">
+        <div className="mx-auto max-w-4xl text-center">
+          <h2 className="mb-4 text-3xl font-bold text-white">Sport History</h2>
+          {subtitle && <p className="mb-12 text-lg text-gray-300">{subtitle}</p>}
         </div>
 
-        <motion.div
-          initial="collapsed"
-          animate={isExpanded ? "expanded" : "collapsed"}
-          variants={expandVariants}
-          className="overflow-hidden"
-        >
-          <div className="pt-2">
-            <p className="text-sm text-gray-300">{item.description}</p>
-          </div>
-        </motion.div>
+        <div className="relative mx-auto max-w-4xl">
+          <div className="absolute left-8 top-0 h-full w-0.5 bg-gradient-to-b from-teal-500 to-teal-700 md:left-1/2 md:-translate-x-px"></div>
 
-        {!isExpanded && <p className="text-sm text-gray-300 line-clamp-2">{item.description}</p>}
-      </motion.div>
-    </motion.div>
+          <div className="space-y-12">
+            {events.map((event, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 50 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                viewport={{ once: true }}
+                className={`relative flex items-center ${index % 2 === 0 ? "md:flex-row" : "md:flex-row-reverse"}`}
+              >
+                <div className="absolute left-8 flex h-4 w-4 items-center justify-center md:left-1/2 md:-translate-x-1/2">
+                  <div className="h-4 w-4 rounded-full bg-teal-500 ring-4 ring-gray-950"></div>
+                </div>
+
+                <div className={`w-full md:w-1/2 ${index % 2 === 0 ? "md:pr-8" : "md:pl-8"}`}>
+                  <div className="ml-16 md:ml-0">
+                    <div className="rounded-lg bg-gray-900 p-6 shadow-lg transition-all duration-300 hover:bg-gray-800">
+                      <div className="mb-2 flex items-center justify-between">
+                        <span className="rounded-full bg-teal-600 px-3 py-1 text-sm font-bold text-white">
+                          {event.year}
+                        </span>
+                        <button
+                          onClick={() => toggleExpanded(index)}
+                          className="text-gray-400 hover:text-teal-400 transition-colors"
+                        >
+                          {expandedItems.has(index) ? (
+                            <ChevronUp className="h-5 w-5" />
+                          ) : (
+                            <ChevronDown className="h-5 w-5" />
+                          )}
+                        </button>
+                      </div>
+                      <h3 className="mb-3 text-xl font-bold text-white">{event.title}</h3>
+                      <p className="text-gray-300">{event.description}</p>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
   )
 }
