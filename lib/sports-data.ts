@@ -1,11 +1,9 @@
-import type React from "react"
 import type { Article, VideoContent } from "@/lib/types"
 
 export interface SportTimeline {
   year: string
   event: string
   description: string
-  additionalContent?: React.ReactNode
 }
 
 // Add this interface for timeline events
@@ -75,59 +73,38 @@ const sportsData: SportInfo[] = [
         event: "Origins",
         description:
           "Wheelchair basketball was developed by World War II veterans in the United States as part of their rehabilitation process.",
-        additionalContent: undefined,
-        additionalInfo:
-          "Wheelchair basketball was developed by World War II veterans in the United States as part of their rehabilitation process. The sport was created at VA hospitals in California and Massachusetts, where injured veterans adapted the game of basketball to be played in wheelchairs. Dr. Tim Nugent of the University of Illinois was instrumental in promoting the sport. The birth of wheelchair basketball helped change perceptions of disability and demonstrated that physical disability did not mean the end of athletic competition.",
       },
       {
         year: "1948",
         event: "First Competition",
         description: "The first wheelchair basketball tournament was held at the Stoke Mandeville Games in England.",
-        additionalContent: undefined,
-        additionalInfo:
-          "Sir Ludwig Guttmann organized the first Stoke Mandeville Games to coincide with the 1948 London Olympics, featuring wheelchair basketball as one of the main events.",
       },
       {
         year: "1960",
         event: "Paralympic Debut",
         description: "Wheelchair basketball made its Paralympic debut at the Rome 1960 Paralympic Games.",
-        additionalContent: undefined,
-        additionalInfo:
-          "The USA won the first gold medal in men's wheelchair basketball at the Rome Paralympics, establishing their early dominance in the sport. Only men's competition was held at this time. Gold: USA, Silver: Great Britain",
       },
       {
         year: "1968",
         event: "Women's Competition",
         description: "Women's wheelchair basketball was introduced at international level competitions.",
-        additionalContent: undefined,
-        additionalInfo:
-          "While women's wheelchair basketball began to be played internationally in 1968, it would take nearly three decades before it would be included in the Paralympic Games.",
       },
       {
         year: "1973",
         event: "IWBF Formation",
         description:
           "The International Wheelchair Basketball Federation (IWBF) was formed to govern the sport globally.",
-        additionalContent: undefined,
-        additionalInfo:
-          "The IWBF was established to standardize rules, organize international competitions, and promote the development of wheelchair basketball worldwide. Today, it has over 100 member nations. IWBF Mission: To encourage and develop the sport of wheelchair basketball for all people with a disability.",
       },
       {
         year: "1996",
         event: "Women's Paralympic Debut",
         description:
           "Women's wheelchair basketball was included in the Paralympic Games for the first time in Atlanta.",
-        additionalContent: undefined,
-        additionalInfo:
-          "Canada won the first gold medal in women's wheelchair basketball at the Atlanta Paralympics, defeating the USA in the final. Gold: Canada, Silver: USA",
       },
       {
         year: "2018",
         event: "3x3 Format",
         description: "The IWBF introduced the 3x3 format of wheelchair basketball.",
-        additionalContent: undefined,
-        additionalInfo:
-          "Following the success of 3x3 basketball in the Olympic program, the IWBF developed a 3x3 format for wheelchair basketball to increase participation and visibility of the sport. The first 3x3 Wheelchair Basketball World Championship was held in 2019.",
       },
     ],
     rules: [
@@ -175,50 +152,32 @@ const sportsData: SportInfo[] = [
         event: "First International Competition",
         description:
           "Para athletics events were included in the Stoke Mandeville Games, the precursor to the Paralympic Games.",
-        additionalContent: undefined,
-        additionalInfo:
-          "Sir Ludwig Guttmann organized these games for World War II veterans with spinal cord injuries. The events primarily included wheelchair racing and throwing events adapted for athletes with paraplegia. The Stoke Mandeville Games were the foundation for what would eventually become the Paralympic movement, with athletics at its core.",
       },
       {
         year: "1960",
         event: "Paralympic Debut",
         description: "Para athletics was included in the first Paralympic Games in Rome.",
-        additionalContent: undefined,
-        additionalInfo:
-          "The Rome 1960 Paralympic Games featured athletics events for athletes with spinal cord injuries. Events included wheelchair racing, javelin, shot put, and club throw. 113 athletes from 17 countries competed in the first Paralympic Games, with athletics being one of the core sports.",
       },
       {
         year: "1976",
         event: "Classification System",
         description: "A formal classification system was introduced for para athletics.",
-        additionalContent: undefined,
-        additionalInfo:
-          "The Toronto 1976 Paralympic Games marked a significant evolution in para athletics with the introduction of a more structured classification system. This allowed athletes with different types of disabilities to compete. The Games expanded to include athletes with visual impairments and amputations, greatly diversifying the sport.",
       },
       {
         year: "1989",
         event: "ISOD World Championships",
         description: "The first official World Championships for para athletics were held.",
-        additionalContent: undefined,
-        additionalInfo:
-          "Hosted in Stoke Mandeville, UK, these championships were organized by the International Sports Organization for the Disabled (ISOD) and marked the first global para athletics competition outside the Paralympic Games. The event helped establish para athletics as a sport in its own right, with regular competition cycles similar to able-bodied athletics.",
       },
       {
         year: "2011",
         event: "IPC Athletics",
         description:
           "The International Paralympic Committee (IPC) took direct governance of para athletics as IPC Athletics.",
-        additionalContent: undefined,
-        additionalInfo:
-          "This change in governance structure allowed for more consistent rule development, classification, and competition management across all para athletics events worldwide. The move helped professionalize the sport and align it more closely with World Athletics (formerly IAAF) standards.",
       },
       {
         year: "2016",
         event: "World Para Athletics",
         description: "IPC Athletics was rebranded as World Para Athletics.",
-        additionalContent: undefined,
-        additionalInfo:
-          "The rebranding was part of a wider IPC strategy to create distinct identities for Paralympic sports. World Para Athletics became the international federation responsible for para athletics globally. This period also saw increased integration with able-bodied athletics, with para athletes competing at some World Athletics events and Diamond League meetings. Today, para athletics is practiced in more than 150 countries and is one of the largest sports in the Paralympic program.",
       },
     ],
     rules: [
@@ -260,41 +219,26 @@ const sportsData: SportInfo[] = [
         year: "1960",
         event: "Paralympic Debut",
         description: "Swimming was included in the first Paralympic Games in Rome.",
-        additionalContent: undefined,
-        additionalInfo:
-          "The Rome 1960 Paralympic Games featured swimming events primarily for athletes with spinal cord injuries. The competition was held in a pool at the Acqua Acetosa sports complex. Events were limited compared to today's program, with a focus on backstroke and freestyle events that were most accessible to athletes with paraplegia.",
       },
       {
         year: "1984",
         event: "Classification Evolution",
         description: "The classification system for para swimming began to evolve toward a functional system.",
-        additionalContent: undefined,
-        additionalInfo:
-          "Prior to 1984, swimmers were classified strictly by medical diagnosis (e.g., amputee, spinal cord injury). The New York/Stoke Mandeville Paralympic Games in 1984 began the shift toward a functional classification system. This change allowed athletes with different disabilities but similar functional abilities in the water to compete against each other, creating more balanced and competitive events.",
       },
       {
         year: "1992",
         event: "Functional Classification",
         description: "A functional classification system was fully implemented for para swimming.",
-        additionalContent: undefined,
-        additionalInfo:
-          "The Barcelona 1992 Paralympic Games marked the first time the functional classification system was fully implemented in para swimming, revolutionizing the sport. The system assessed athletes based on their functional ability in the water rather than their medical diagnosis, using a point system to evaluate strength, coordination, range of motion, and other factors. The functional classification system was a game-changer for para swimming, creating more equitable competition and allowing the sport to grow significantly.",
       },
       {
         year: "2009",
         event: "IPC Swimming",
         description: "The International Paralympic Committee took direct governance of para swimming.",
-        additionalContent: undefined,
-        additionalInfo:
-          "The IPC assumed direct responsibility for para swimming as the international federation, taking over from previous disability-specific organizations. This change allowed for more consistent rule development, classification, and competition management across all para swimming events worldwide.",
       },
       {
         year: "2016",
         event: "World Para Swimming",
         description: "IPC Swimming was rebranded as World Para Swimming.",
-        additionalContent: undefined,
-        additionalInfo:
-          "The rebranding was part of a wider IPC strategy to create distinct identities for Paralympic sports. World Para Swimming became the international federation responsible for para swimming globally. This period also saw increased integration with able-bodied swimming, with some competitions featuring both para and able-bodied events. Today, para swimming is practiced in more than 100 countries and is one of the most popular sports in the Paralympic program.",
       },
     ],
     rules: [

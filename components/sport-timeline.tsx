@@ -49,13 +49,11 @@ function TimelineItem({ item, index }: TimelineItemProps) {
     }
   }, [])
 
-  // Determine if this is a major milestone event
   const isMajorEvent =
     item.event.toLowerCase().includes("paralympic") ||
     item.event.toLowerCase().includes("world championship") ||
     item.event.toLowerCase().includes("origins")
 
-  // Variants for animations
   const containerVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: {
@@ -63,7 +61,7 @@ function TimelineItem({ item, index }: TimelineItemProps) {
       y: 0,
       transition: {
         duration: 0.5,
-        delay: index * 0.2, // Stagger the animations
+        delay: index * 0.2,
       },
     },
   }
@@ -128,7 +126,7 @@ function TimelineItem({ item, index }: TimelineItemProps) {
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
       >
-        <span className="font-bold">{item.year}</span>
+        <span className="font-bold text-xs">{item.year}</span>
       </motion.div>
 
       <motion.div
@@ -149,21 +147,7 @@ function TimelineItem({ item, index }: TimelineItemProps) {
           </button>
         </div>
 
-        <motion.div
-          initial="collapsed"
-          animate={isExpanded ? "expanded" : "collapsed"}
-          variants={expandVariants}
-          className="overflow-hidden"
-        >
-          <div className="pt-2">
-            <p className="text-sm text-gray-300">{item.description}</p>
-            {item.additionalContent && (
-              <div className="mt-3 border-t border-gray-700 pt-3">{item.additionalContent}</div>
-            )}
-          </div>
-        </motion.div>
-
-        {!isExpanded && <p className="text-sm text-gray-300 line-clamp-2">{item.description}</p>}
+        <p className="text-sm text-gray-300">{item.description}</p>
       </motion.div>
     </motion.div>
   )
