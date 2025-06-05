@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
-import { Check, ChevronLeft, Info, X, Beaker } from "lucide-react"
+import { Check, ChevronLeft, Info, X } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 
 import { Button } from "@/components/ui/button"
@@ -56,18 +56,6 @@ export default function MembershipPlans() {
 
     // Redirect to checkout
     router.push(`/checkout?plan=${plan}&billing=${billingCycle}`)
-  }
-
-  // Function to bypass checkout and go directly to success page
-  const handleTestAccess = (plan: string) => {
-    // Store plan info in session storage
-    sessionStorage.setItem("dsc_selected_plan", plan)
-    sessionStorage.setItem("dsc_billing_cycle", billingCycle)
-    sessionStorage.setItem("dsc_subscription_active", "true")
-    sessionStorage.setItem("dsc_subscription_plan", plan)
-
-    // Redirect directly to success page or premium content
-    router.push(`/checkout/success?test=true&plan=${plan}`)
   }
 
   const plans = {
@@ -353,18 +341,6 @@ export default function MembershipPlans() {
                             onClick={() => handlePlanSelection(plan.id)}
                           >
                             Select Plan
-                          </Button>
-                        </motion.div>
-
-                        {/* Test Flow Button */}
-                        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                          <Button
-                            variant="outline"
-                            className="w-full border-gray-700/50 hover:border-teal-500/50 text-gray-400 hover:text-teal-400 rounded-full py-3 transition-all duration-300 flex items-center justify-center gap-2"
-                            onClick={() => handleTestAccess(plan.id)}
-                          >
-                            <Beaker className="h-4 w-4" />
-                            <span>Test Access</span>
                           </Button>
                         </motion.div>
                       </div>

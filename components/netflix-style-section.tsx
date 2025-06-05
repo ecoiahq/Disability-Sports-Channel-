@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { ChevronRight, Beaker } from "lucide-react"
+import { ChevronRight } from "lucide-react"
 
 export default function NetflixStyleSection() {
   const [email, setEmail] = useState("")
@@ -32,17 +32,6 @@ export default function NetflixStyleSection() {
       sessionStorage.setItem("dsc_user_email", email)
       router.push(`/membership-plans?email=${encodeURIComponent(email)}`)
     }, 500)
-  }
-
-  const handleTestFlow = () => {
-    // Use a test email
-    const testEmail = "test@example.com"
-
-    // Store email in session storage
-    sessionStorage.setItem("dsc_user_email", testEmail)
-
-    // Redirect to membership plans
-    router.push(`/membership-plans?email=${encodeURIComponent(testEmail)}`)
   }
 
   return (
@@ -154,18 +143,6 @@ export default function NetflixStyleSection() {
               <ChevronRight className="h-5 w-5" />
             </Button>
           </form>
-          <div className="mt-4 flex justify-center">
-            <Button
-              type="button"
-              onClick={handleTestFlow}
-              variant="outline"
-              size="sm"
-              className="bg-gray-800/40 border-gray-700/50 hover:bg-gray-700/50 text-gray-300 hover:text-white flex items-center gap-1.5"
-            >
-              <Beaker className="h-3.5 w-3.5" />
-              Test Flow
-            </Button>
-          </div>
         </div>
       </div>
     </section>
