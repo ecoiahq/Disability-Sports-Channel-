@@ -1,4 +1,11 @@
-const WheelchairBasketballPage = () => {
+import type { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "Wheelchair Basketball | Disability Sports Channel",
+  description: "Learn about wheelchair basketball, rules, and how to get involved.",
+}
+
+export default function WheelchairBasketballPage() {
   return (
     <div className="container mx-auto py-8">
       <h1 className="text-3xl font-bold mb-4">Wheelchair Basketball</h1>
@@ -34,5 +41,3 @@ const WheelchairBasketballPage = () => {
     </div>
   )
 }
-
-export default WheelchairBasketballPage
