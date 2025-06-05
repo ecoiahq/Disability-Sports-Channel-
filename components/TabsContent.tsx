@@ -1,15 +1,16 @@
-import type { ReactNode } from "react"
+import type React from "react"
 
 interface TabsContentProps {
   value: string
-  children: ReactNode
+  activeTab: string
+  children: React.ReactNode
   className?: string
 }
 
-export default function TabsContent({ value, children, className = "" }: TabsContentProps) {
-  return (
-    <div role="tabpanel" data-value={value} className={`mt-6 ${className}`}>
-      {children}
-    </div>
-  )
+export default function TabsContent({ value, activeTab, children, className = "" }: TabsContentProps) {
+  if (value !== activeTab) {
+    return null
+  }
+
+  return <div className={`mt-4 ${className}`}>{children}</div>
 }
