@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import EnhancedFooter from "@/components/enhanced-footer"
 import SiteHeader from "@/components/site-header"
-import SportHistoryTimeline from "@/components/sport-history-timeline"
+import SportTimelineComponent from "@/components/sport-timeline"
 import { getSportBySlug, getSportNews, getSportVideos } from "@/lib/sports-data"
 
 export const metadata = {
@@ -140,7 +140,7 @@ export default function AlpineSkiingPage() {
               </TabsContent>
               <TabsContent value="history" className="mt-6">
                 <h2 className="text-2xl font-bold">History of {sport.name}</h2>
-                <SportHistoryTimeline timeline={sport.timeline} />
+                <SportTimelineComponent timeline={sport.timeline} />
               </TabsContent>
               <TabsContent value="news" className="mt-6">
                 <h2 className="text-2xl font-bold">Latest News</h2>
