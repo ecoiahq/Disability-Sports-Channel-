@@ -1,13 +1,45 @@
+import {
+  client,
+  sanityConfigured,
+  FEATURED_ARTICLES_QUERY,
+  LATEST_ARTICLES_QUERY,
+  ARTICLES_QUERY,
+  urlFor,
+} from "@/lib/sanity"
 import type { Article, PodcastEpisode, VideoContent } from "@/lib/types"
 
 /**
  * Data Service
  *
- * This file contains mock data for the application.
- * In a production environment, this would be replaced with API calls.
+ * This file contains data functions for the application.
+ * It tries to fetch from Sanity first, then falls back to static data.
  */
 
+// Transform Sanity article data to our Article type
+function transformSanityArticle(sanityArticle: any): Article {
+  return {
+    id: sanityArticle._id,
+    title: sanityArticle.title,
+    excerpt: sanityArticle.excerpt,
+    image:
+      sanityArticle.featuredImage && urlFor
+        ? urlFor(sanityArticle.featuredImage).width(800).height(450).url()
+        : "/placeholder.svg",
+    date: new Date(sanityArticle.publishedAt).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }),
+    author: sanityArticle.author?.name || "Unknown Author",
+    category: sanityArticle.category?.title || "Uncategorized",
+    url: `/news/${sanityArticle.slug.current}`,
+    sportTags: sanityArticle.sportTags || [],
+  }
+}
+
 export const getFeaturedArticles = (): Article[] => {
+  // For now, return static data to preserve layout
+  // Will be updated to async when Sanity is configured
   return [
     {
       id: 1,
@@ -19,6 +51,7 @@ export const getFeaturedArticles = (): Article[] => {
       author: "James Wilson",
       category: "Para Swimming",
       url: "/news/dunn-breaks-world-record-100m-freestyle",
+      sportTags: ["para-swimming"],
     },
     {
       id: 2,
@@ -30,11 +63,14 @@ export const getFeaturedArticles = (): Article[] => {
       author: "Sarah Johnson",
       category: "Wheelchair Tennis",
       url: "/news/alcott-schroder-wheelchair-tennis-final",
+      sportTags: ["wheelchair-tennis"],
     },
   ]
 }
 
 export const getLatestArticles = (): Article[] => {
+  // For now, return static data to preserve layout
+  // Will be updated to async when Sanity is configured
   return [
     {
       id: 1,
@@ -46,6 +82,7 @@ export const getLatestArticles = (): Article[] => {
       author: "Michael Chen",
       category: "Para Archery",
       url: "/news/stubbs-gold-para-archery-final",
+      sportTags: ["para-archery"],
     },
     {
       id: 2,
@@ -57,6 +94,7 @@ export const getLatestArticles = (): Article[] => {
       author: "Emma Parker",
       category: "Paralympic News",
       url: "/news/paralympic-committee-new-classification-guidelines",
+      sportTags: [],
     },
     {
       id: 3,
@@ -68,6 +106,7 @@ export const getLatestArticles = (): Article[] => {
       author: "David Thompson",
       category: "Boccia",
       url: "/news/boccia-world-rankings-update",
+      sportTags: ["boccia"],
     },
     {
       id: 4,
@@ -79,6 +118,7 @@ export const getLatestArticles = (): Article[] => {
       author: "Lisa Anderson",
       category: "Winter Sports",
       url: "/news/para-snowboard-world-cup-finland",
+      sportTags: [],
     },
     {
       id: 5,
@@ -90,6 +130,7 @@ export const getLatestArticles = (): Article[] => {
       author: "Robert Johnson",
       category: "Technology",
       url: "/news/new-technology-visually-impaired-fans",
+      sportTags: [],
     },
     {
       id: 6,
@@ -101,6 +142,123 @@ export const getLatestArticles = (): Article[] => {
       author: "Sophie Martin",
       category: "Paralympic News",
       url: "/news/paris-2024-ticket-sales-record",
+      sportTags: [],
+    },
+  ]
+}
+
+// Async versions for when Sanity is configured
+export const getFeaturedArticlesAsync = async (): Promise<Article[]> => {
+  try {
+    if (sanityConfigured && client) {
+      const sanityArticles = await client.fetch(FEATURED_ARTICLES_QUERY)
+      if (sanityArticles && sanityArticles.length > 0) {
+        return sanityArticles.map(transformSanityArticle)
+      }
+    }
+    return getFeaturedArticles()
+  } catch (error) {
+    console.error("Error fetching featured articles:", error)
+    return getFeaturedArticles()
+  }
+}
+
+export const getLatestArticlesAsync = async (): Promise<Article[]> => {
+  try {
+    if (sanityConfigured && client) {
+      const sanityArticles = await client.fetch(LATEST_ARTICLES_QUERY)
+      if (sanityArticles && sanityArticles.length > 0) {
+        return sanityArticles.map(transformSanityArticle)
+      }
+    }
+    return getLatestArticles()
+  } catch (error) {
+    console.error("Error fetching latest articles:", error)
+    return getLatestArticles()
+  }
+}
+
+export const getAllArticlesAsync = async (): Promise<Article[]> => {
+  try {
+    if (sanityConfigured && client) {
+      const sanityArticles = await client.fetch(ARTICLES_QUERY)
+      if (sanityArticles && sanityArticles.length > 0) {
+        return sanityArticles.map(transformSanityArticle)
+      }
+    }
+    return [...getFeaturedArticles(), ...getLatestArticles()]
+  } catch (error) {
+    console.error("Error fetching all articles:", error)
+    return [...getFeaturedArticles(), ...getLatestArticles()]
+  }
+}
+
+// Keep existing functions for other data (podcasts, events, etc.)
+export const getPodcasts = (): PodcastEpisode[] => {
+  return [
+    {
+      id: 1,
+      title: "The Journey to Paralympic Gold",
+      guest: "Emma Parker",
+      description: "Emma shares her incredible journey from rehabilitation to winning Paralympic gold in Tokyo.",
+      image: "/female-paralympic-athlete.png",
+      duration: "42:15",
+      date: "May 1, 2025",
+      url: "/podcasts/journey-to-gold",
+    },
+    {
+      id: 2,
+      title: "Coaching Elite Para Athletes",
+      guest: "James Wilson",
+      description:
+        "Top coach James Wilson discusses the unique challenges and rewards of training Paralympic champions.",
+      image: "/placeholder.svg?height=400&width=400",
+      duration: "38:50",
+      date: "April 24, 2025",
+      url: "/podcasts/coaching-elite",
+    },
+    {
+      id: 3,
+      title: "Technology in Para Sports",
+      guest: "Dr. Sarah Chen",
+      description:
+        "Dr. Chen explores how cutting-edge technology is revolutionizing para sports equipment and performance.",
+      image: "/placeholder.svg?height=400&width=400",
+      duration: "45:22",
+      date: "April 17, 2025",
+      url: "/podcasts/technology-para-sports",
+    },
+    {
+      id: 4,
+      title: "Mental Health in Elite Para Sport",
+      guest: "Dr. Michael Torres",
+      description:
+        "Sports psychologist Dr. Torres discusses the mental challenges faced by para athletes at the highest level.",
+      image: "/sports-psychology-session.png",
+      duration: "51:08",
+      date: "April 10, 2025",
+      url: "/podcasts/mental-health-elite",
+    },
+    {
+      id: 5,
+      title: "Breaking Barriers in Para Swimming",
+      guest: "Sophia Lee",
+      description:
+        "Multiple gold medalist Sophia Lee talks about her career and breaking world records in para swimming.",
+      image: "/para-swimming-competition.png",
+      duration: "39:45",
+      date: "April 3, 2025",
+      url: "/podcasts/breaking-barriers-swimming",
+    },
+    {
+      id: 6,
+      title: "The Business of Para Sports",
+      guest: "Robert Johnson",
+      description: "Sports marketing expert Robert Johnson discusses the growing commercial appeal of para sports.",
+      image: "/placeholder.svg?height=400&width=400",
+      duration: "47:30",
+      date: "March 27, 2025",
+      url: "/podcasts/business-para-sports",
     },
   ]
 }
@@ -181,105 +339,52 @@ export function getUpcomingEvents() {
   ]
 }
 
-export const getPodcasts = (): PodcastEpisode[] => {
-  return [
-    {
-      id: 1,
-      title: "The Journey to Paralympic Gold",
-      guest: "Emma Parker",
-      description: "Emma shares her incredible journey from rehabilitation to winning Paralympic gold in Tokyo.",
-      image: "/female-paralympic-athlete.png",
-      duration: "42:15",
-      date: "May 1, 2025",
-      url: "/podcasts/journey-to-gold",
-    },
-    {
-      id: 2,
-      title: "Coaching Elite Para Athletes",
-      guest: "James Wilson",
-      description:
-        "Top coach James Wilson discusses the unique challenges and rewards of training Paralympic champions.",
-      image: "/placeholder.svg?height=400&width=400",
-      duration: "38:50",
-      date: "April 24, 2025",
-      url: "/podcasts/coaching-elite",
-    },
-    {
-      id: 3,
-      title: "Technology in Para Sports",
-      guest: "Dr. Sarah Chen",
-      description:
-        "Dr. Chen explores how cutting-edge technology is revolutionizing para sports equipment and performance.",
-      image: "/placeholder.svg?height=400&width=400",
-      duration: "45:22",
-      date: "April 17, 2025",
-      url: "/podcasts/technology-para-sports",
-    },
-    {
-      id: 4,
-      title: "Mental Health in Elite Para Sport",
-      guest: "Dr. Michael Torres",
-      description:
-        "Sports psychologist Dr. Torres discusses the mental challenges faced by para athletes at the highest level.",
-      image: "/sports-psychology-session.png",
-      duration: "51:08",
-      date: "April 10, 2025",
-      url: "/podcasts/mental-health-elite",
-    },
-    {
-      id: 5,
-      title: "Breaking Barriers in Para Swimming",
-      guest: "Sophia Lee",
-      description:
-        "Multiple gold medalist Sophia Lee talks about her career and breaking world records in para swimming.",
-      image: "/para-swimming-competition.png",
-      duration: "39:45",
-      date: "April 3, 2025",
-      url: "/podcasts/breaking-barriers-swimming",
-    },
-    {
-      id: 6,
-      title: "The Business of Para Sports",
-      guest: "Robert Johnson",
-      description: "Sports marketing expert Robert Johnson discusses the growing commercial appeal of para sports.",
-      image: "/placeholder.svg?height=400&width=400",
-      duration: "47:30",
-      date: "March 27, 2025",
-      url: "/podcasts/business-para-sports",
-    },
-  ]
-}
-
 export const getContentGrid = (category: string): VideoContent[] => {
   // This would typically come from an API or CMS based on the category
   return [
     {
       id: 1,
       title: "Para Athletics World Championships Highlights",
+      description: "Best moments from the championships",
       image: "/para-athletics-track.png",
       category: "Athletics",
+      duration: "15:30",
       url: "/watch/para-athletics-highlights",
+      views: "125K",
+      date: "2 days ago",
     },
     {
       id: 2,
       title: "Wheelchair Rugby: The Clash of Titans",
+      description: "Epic match highlights",
       image: "/placeholder.svg?key=yemx0",
       category: "Rugby",
+      duration: "12:45",
       url: "/watch/wheelchair-rugby-titans",
+      views: "89K",
+      date: "1 week ago",
     },
     {
       id: 3,
       title: "Swimming Stars: Path to Paris 2024",
+      description: "Following the journey to Paris",
       image: "/para-swimming-competition.png",
       category: "Swimming",
+      duration: "22:15",
       url: "/watch/swimming-paris-2024",
+      views: "203K",
+      date: "3 days ago",
     },
     {
       id: 4,
       title: "Inside Look: GB Sitting Volleyball Team",
+      description: "Behind the scenes with Team GB",
       image: "/placeholder.svg?height=400&width=600",
       category: "Volleyball",
+      duration: "18:30",
       url: "/watch/sitting-volleyball-gb",
+      views: "67K",
+      date: "5 days ago",
     },
   ]
 }
