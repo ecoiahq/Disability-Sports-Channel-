@@ -11,11 +11,18 @@ function getValidApiVersion(): string {
 
   // If no environment variable, use default
   if (!envApiVersion) {
+    console.log("No SANITY_API_VERSION found, using default")
     return "2023-05-03"
   }
 
   // Clean the environment variable (remove whitespace)
   const cleanVersion = envApiVersion.trim()
+
+  // If it looks like a token (long string with mixed characters), use default
+  if (cleanVersion.length > 20 || cleanVersion.includes("_") || /[A-Z]/.test(cleanVersion)) {
+    console.warn(`API version looks like a token, using default. Check your environment variables.`)
+    return "2023-05-03"
+  }
 
   // Check if it's the legacy version "1"
   if (cleanVersion === "1") {
@@ -42,6 +49,12 @@ console.log("Sanity configuration:", {
   dataset,
   apiVersion,
   sanityConfigured,
+  envVars: {
+    NEXT_PUBLIC_SANITY_PROJECT_ID: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID ? "✓ Set" : "✗ Missing",
+    NEXT_PUBLIC_SANITY_DATASET: process.env.NEXT_PUBLIC_SANITY_DATASET ? "✓ Set" : "✗ Missing",
+    NEXT_PUBLIC_SANITY_API_VERSION: process.env.NEXT_PUBLIC_SANITY_API_VERSION ? "✓ Set" : "✗ Missing",
+    SANITY_API_TOKEN: process.env.SANITY_API_TOKEN ? "✓ Set" : "✗ Missing",
+  },
 })
 
 // Create client configuration
