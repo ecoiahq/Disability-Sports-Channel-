@@ -3,7 +3,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { Calendar, User, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { client, urlFor, sanityConfigured } from "@/lib/sanity"
+import { client, sanityConfigured, generateImageUrl } from "@/lib/sanity"
 import { PortableText } from "@portabletext/react"
 import SiteHeader from "@/components/site-header"
 import EnhancedFooter from "@/components/enhanced-footer"
@@ -17,41 +17,13 @@ interface ArticlePageProps {
 // Disable static generation for now to allow dynamic routing
 export const dynamic = "force-dynamic"
 
-// Helper function to get image URL from Sanity
-function getSanityImageUrl(imageField: any, width = 1200, height = 675): string {
-  if (!imageField) return "/placeholder.svg"
-
-  // If it's a direct asset URL
-  if (imageField.asset?.url) {
-    return imageField.asset.url
-  }
-
-  // If we can use urlFor to build the URL
-  if (urlFor && imageField) {
-    try {
-      const url = urlFor(imageField).width(width).height(height).url()
-      return url || "/placeholder.svg"
-    } catch (error) {
-      console.error("Error generating image URL:", error)
-      return "/placeholder.svg"
-    }
-  }
-
-  // If it's already a string URL
-  if (typeof imageField === "string") {
-    return imageField
-  }
-
-  return "/placeholder.svg"
-}
-
 // Custom PortableText components for proper formatting
 const portableTextComponents = {
   types: {
     image: ({ value }: any) => (
       <div className="my-8">
         <Image
-          src={getSanityImageUrl(value, 800, 450) || "/placeholder.svg"}
+          src={generateImageUrl(value, 800, 450) || "/placeholder.svg"}
           alt={value.alt || ""}
           width={800}
           height={450}
@@ -62,16 +34,11 @@ const portableTextComponents = {
     ),
   },
   block: {
-    // Headings
     h1: ({ children }: any) => <h1 className="text-4xl font-bold mb-6 mt-8 text-white">{children}</h1>,
     h2: ({ children }: any) => <h2 className="text-3xl font-bold mb-4 mt-6 text-white">{children}</h2>,
     h3: ({ children }: any) => <h3 className="text-2xl font-bold mb-3 mt-5 text-white">{children}</h3>,
     h4: ({ children }: any) => <h4 className="text-xl font-bold mb-2 mt-4 text-white">{children}</h4>,
-
-    // Paragraphs
     normal: ({ children }: any) => <p className="mb-4 text-gray-300 leading-relaxed text-lg">{children}</p>,
-
-    // Block quotes
     blockquote: ({ children }: any) => (
       <blockquote className="border-l-4 border-teal-600 pl-6 my-6 italic text-gray-300 bg-gray-900 py-4 rounded-r-lg">
         {children}
@@ -79,32 +46,23 @@ const portableTextComponents = {
     ),
   },
   list: {
-    // Bullet lists
     bullet: ({ children }: any) => <ul className="list-disc list-inside mb-4 text-gray-300 space-y-2">{children}</ul>,
-    // Numbered lists
     number: ({ children }: any) => (
       <ol className="list-decimal list-inside mb-4 text-gray-300 space-y-2">{children}</ol>
     ),
   },
   listItem: {
-    // List items
     bullet: ({ children }: any) => <li className="mb-1">{children}</li>,
     number: ({ children }: any) => <li className="mb-1">{children}</li>,
   },
   marks: {
-    // Bold text
     strong: ({ children }: any) => <strong className="font-bold text-white">{children}</strong>,
-    // Italic text
     em: ({ children }: any) => <em className="italic">{children}</em>,
-    // Underline
     underline: ({ children }: any) => <u className="underline">{children}</u>,
-    // Strike through
     "strike-through": ({ children }: any) => <s className="line-through">{children}</s>,
-    // Code
     code: ({ children }: any) => (
       <code className="bg-gray-800 text-teal-400 px-2 py-1 rounded text-sm font-mono">{children}</code>
     ),
-    // Links
     link: ({ children, value }: any) => (
       <a
         href={value.href}
@@ -120,13 +78,11 @@ const portableTextComponents = {
 
 async function getArticle(slug: string) {
   try {
-    // Sanitize the incoming slug parameter
     const cleanSlug = slug.trim()
-
-    console.log(`Looking for article with slug: "${slug}" or clean slug: "${cleanSlug}"`)
+    console.log(`🔍 Looking for article with slug: "${slug}"`)
 
     if (sanityConfigured && client) {
-      // Try to fetch post first - with more flexible slug matching
+      // Enhanced query with better image handling
       const postQuery = `*[_type == "post" && (
         slug.current == $slug || 
         slug.current == $cleanSlug ||
@@ -136,13 +92,8 @@ async function getArticle(slug: string) {
         title,
         slug,
         publishedAt,
-        image {
-          asset->{
-            _id,
-            url
-          },
-          alt
-        },
+        image,
+        "imageAsset": image.asset->,
         body,
         featured
       }`
@@ -150,13 +101,12 @@ async function getArticle(slug: string) {
       const post = await client.fetch(postQuery, {
         slug,
         cleanSlug,
-        trimmedSlug: slug.replace(/^%20/, "").trim(), // Remove URL encoded space at start
+        trimmedSlug: slug.replace(/^%20/, "").trim(),
       })
 
-      console.log("Post query result:", post)
+      console.log("📄 Post query result:", post)
 
       if (post) {
-        // Transform post to article format
         const excerpt =
           post.body
             ?.find((block: any) => block._type === "block")
@@ -170,65 +120,16 @@ async function getArticle(slug: string) {
           excerpt: excerpt,
           content: post.body,
           featuredImage: post.image,
+          imageAsset: post.imageAsset,
           publishedAt: post.publishedAt,
           author: { name: "Admin" },
           category: { title: "News" },
           sportTags: [],
         }
       }
-
-      // Try to fetch all posts to debug
-      const allPosts = await client.fetch(`*[_type == "post"] {
-        _id,
-        title,
-        "slug": slug.current
-      }`)
-      console.log("All available posts:", allPosts)
-
-      // Fallback to article with flexible matching
-      const articleQuery = `*[_type == "article" && (
-        slug.current == $slug || 
-        slug.current == $cleanSlug ||
-        slug.current == $trimmedSlug
-      )][0] {
-        _id,
-        title,
-        slug,
-        excerpt,
-        content,
-        featuredImage {
-          asset->{
-            _id,
-            url
-          },
-          alt
-        },
-        publishedAt,
-        sportTags,
-        author->{
-          name,
-          slug,
-          image,
-          bio
-        },
-        category->{
-          title,
-          slug
-        }
-      }`
-
-      const article = await client.fetch(articleQuery, {
-        slug,
-        cleanSlug,
-        trimmedSlug: slug.replace(/^%20/, "").trim(),
-      })
-
-      console.log("Article query result:", article)
-
-      if (article) return article
     }
 
-    // Fallback to static article data for testing
+    // Static fallback articles
     const staticArticles = [
       {
         _id: "1",
@@ -258,23 +159,14 @@ async function getArticle(slug: string) {
         title: "Patrick Anderson: The Unstoppable Force of Wheelchair Basketball",
         slug: { current: "patrick-anderson-the-unstoppable-force-of-wheelchair-basketball" },
         excerpt:
-          "Patrick Anderson has officially announced his retirement from wheelchair basketball, marking the end of an era for the sport. Widely regarded as the greatest player in wheelchair basketball history, Anderson's impact on the game cannot be overstated.",
+          "Patrick Anderson has officially announced his retirement from wheelchair basketball, marking the end of an era for the sport.",
         content: [
           {
             _type: "block",
             children: [
               {
                 _type: "span",
-                text: "Patrick Anderson has officially announced his retirement from wheelchair basketball, marking the end of an era for the sport. Widely regarded as the greatest player in wheelchair basketball history, Anderson's impact on the game cannot be overstated. Over his illustrious career, he has won three Paralympic gold medals, led Canada to numerous international victories, and inspired countless athletes around the world.",
-              },
-            ],
-          },
-          {
-            _type: "block",
-            children: [
-              {
-                _type: "span",
-                text: "Born in Fergus, Ontario, Anderson lost both his legs in a drunk driving accident at the age of nine. Rather than let this define him negatively, he channeled his energy into sports, eventually discovering wheelchair basketball. His natural talent, combined with an unrelenting work ethic, quickly set him apart from his peers.",
+                text: "Patrick Anderson has officially announced his retirement from wheelchair basketball, marking the end of an era for the sport. Widely regarded as the greatest player in wheelchair basketball history, Anderson's impact on the game cannot be overstated.",
               },
             ],
           },
@@ -287,37 +179,30 @@ async function getArticle(slug: string) {
       },
     ]
 
-    // Try to match with various slug formats
-    const matchingSlugs = [
-      cleanSlug,
-      slug,
-      slug.replace(/^%20/, ""), // Remove URL encoded space
-      decodeURIComponent(slug).trim(), // Decode URL encoding
-    ]
+    const matchingSlugs = [cleanSlug, slug, slug.replace(/^%20/, ""), decodeURIComponent(slug).trim()]
 
     for (const testSlug of matchingSlugs) {
       const found = staticArticles.find((article) => article.slug.current === testSlug)
       if (found) {
-        console.log(`Found static article with slug: ${testSlug}`)
+        console.log(`✅ Found static article with slug: ${testSlug}`)
         return found
       }
     }
 
-    console.log(`No article found for any of these slugs:`, matchingSlugs)
     return null
   } catch (error) {
-    console.error("Error fetching article:", error)
+    console.error("❌ Error fetching article:", error)
     return null
   }
 }
 
 export default async function ArticlePage({ params }: ArticlePageProps) {
-  console.log("ArticlePage called with slug:", params.slug)
+  console.log("📖 ArticlePage called with slug:", params.slug)
 
   const article = await getArticle(params.slug)
 
   if (!article) {
-    console.log("Article not found, showing 404")
+    console.log("❌ Article not found, showing 404")
     notFound()
   }
 
@@ -327,8 +212,18 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     day: "numeric",
   })
 
-  // Use the helper function to get the proper image URL
-  const imageUrl = getSanityImageUrl(article.featuredImage, 1200, 675)
+  // Enhanced image URL generation with multiple fallbacks
+  let imageUrl = "/placeholder.svg"
+
+  if (article.featuredImage) {
+    imageUrl = generateImageUrl(article.featuredImage, 1200, 675)
+  } else if (article.imageAsset?.url) {
+    imageUrl = article.imageAsset.url
+  } else if (typeof article.featuredImage === "string") {
+    imageUrl = article.featuredImage
+  }
+
+  console.log("🖼️ Final image URL for article:", imageUrl)
 
   return (
     <div className="flex min-h-screen flex-col bg-black text-white">
@@ -337,7 +232,6 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
         <article className="py-12">
           <div className="container px-4 md:px-6">
             <div className="mx-auto max-w-4xl">
-              {/* Back Button */}
               <Button asChild variant="ghost" className="mb-6 text-gray-400 hover:text-white">
                 <Link href="/news">
                   <ArrowLeft className="mr-2 h-4 w-4" />
@@ -345,7 +239,6 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                 </Link>
               </Button>
 
-              {/* Article Header */}
               <header className="mb-8">
                 <div className="mb-4 inline-block rounded bg-teal-600 px-3 py-1 text-sm font-medium text-white">
                   {article.category?.title}
@@ -364,7 +257,6 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                 </div>
               </header>
 
-              {/* Featured Image */}
               <div className="mb-8">
                 <Image
                   src={imageUrl || "/placeholder.svg"}
@@ -375,7 +267,6 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                 />
               </div>
 
-              {/* Article Content */}
               <div className="max-w-none">
                 {article.content ? (
                   <PortableText value={article.content} components={portableTextComponents} />
@@ -384,7 +275,6 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                 )}
               </div>
 
-              {/* Sport Tags */}
               {article.sportTags && article.sportTags.length > 0 && (
                 <div className="mt-8 border-t border-gray-800 pt-8">
                   <h3 className="mb-4 text-lg font-semibold">Related Sports</h3>
