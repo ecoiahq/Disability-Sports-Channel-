@@ -17,13 +17,41 @@ interface ArticlePageProps {
 // Disable static generation for now to allow dynamic routing
 export const dynamic = "force-dynamic"
 
+// Helper function to get image URL from Sanity
+function getSanityImageUrl(imageField: any, width = 1200, height = 675): string {
+  if (!imageField) return "/placeholder.svg"
+
+  // If it's a direct asset URL
+  if (imageField.asset?.url) {
+    return imageField.asset.url
+  }
+
+  // If we can use urlFor to build the URL
+  if (urlFor && imageField) {
+    try {
+      const url = urlFor(imageField).width(width).height(height).url()
+      return url || "/placeholder.svg"
+    } catch (error) {
+      console.error("Error generating image URL:", error)
+      return "/placeholder.svg"
+    }
+  }
+
+  // If it's already a string URL
+  if (typeof imageField === "string") {
+    return imageField
+  }
+
+  return "/placeholder.svg"
+}
+
 // Custom PortableText components for proper formatting
 const portableTextComponents = {
   types: {
     image: ({ value }: any) => (
       <div className="my-8">
         <Image
-          src={urlFor && urlFor(value) ? urlFor(value).width(800).height(450).url() : "/placeholder.svg"}
+          src={getSanityImageUrl(value, 800, 450) || "/placeholder.svg"}
           alt={value.alt || ""}
           width={800}
           height={450}
@@ -299,20 +327,8 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     day: "numeric",
   })
 
-  // Fix image URL generation
-  let imageUrl = "/placeholder.svg"
-  if (article.featuredImage) {
-    if (urlFor && article.featuredImage.asset) {
-      // Sanity image with asset reference
-      imageUrl = urlFor(article.featuredImage).width(1200).height(675).url()
-    } else if (typeof article.featuredImage === "string") {
-      // Direct URL
-      imageUrl = article.featuredImage
-    } else if (article.featuredImage.asset?.url) {
-      // Direct asset URL
-      imageUrl = article.featuredImage.asset.url
-    }
-  }
+  // Use the helper function to get the proper image URL
+  const imageUrl = getSanityImageUrl(article.featuredImage, 1200, 675)
 
   return (
     <div className="flex min-h-screen flex-col bg-black text-white">

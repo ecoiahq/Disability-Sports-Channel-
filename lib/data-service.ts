@@ -17,6 +17,34 @@ import type { Article, PodcastEpisode, VideoContent } from "@/lib/types"
  * It tries to fetch from Sanity first, then falls back to static data.
  */
 
+// Helper function to get image URL from Sanity
+function getSanityImageUrl(imageField: any): string {
+  if (!imageField) return "/placeholder.svg"
+
+  // If it's a direct asset URL
+  if (imageField.asset?.url) {
+    return imageField.asset.url
+  }
+
+  // If we can use urlFor to build the URL
+  if (urlFor && imageField) {
+    try {
+      const url = urlFor(imageField).width(800).height(450).url()
+      return url || "/placeholder.svg"
+    } catch (error) {
+      console.error("Error generating image URL:", error)
+      return "/placeholder.svg"
+    }
+  }
+
+  // If it's already a string URL
+  if (typeof imageField === "string") {
+    return imageField
+  }
+
+  return "/placeholder.svg"
+}
+
 // Transform Sanity post data to our Article type
 function transformSanityPost(sanityPost: any): Article {
   // Extract first paragraph from body as excerpt
@@ -29,11 +57,14 @@ function transformSanityPost(sanityPost: any): Article {
   // Sanitize slug by trimming spaces and ensuring it's clean
   const cleanSlug = sanityPost.slug?.current?.trim() || ""
 
+  // Get proper image URL
+  const imageUrl = getSanityImageUrl(sanityPost.image)
+
   return {
     id: sanityPost._id,
     title: sanityPost.title,
     excerpt: excerpt,
-    image: sanityPost.image && urlFor ? urlFor(sanityPost.image).width(800).height(450).url() : "/placeholder.svg",
+    image: imageUrl,
     date: new Date(sanityPost.publishedAt).toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
@@ -51,14 +82,14 @@ function transformSanityArticle(sanityArticle: any): Article {
   // Sanitize slug by trimming spaces and ensuring it's clean
   const cleanSlug = sanityArticle.slug?.current?.trim() || ""
 
+  // Get proper image URL
+  const imageUrl = getSanityImageUrl(sanityArticle.featuredImage)
+
   return {
     id: sanityArticle._id,
     title: sanityArticle.title,
     excerpt: sanityArticle.excerpt,
-    image:
-      sanityArticle.featuredImage && urlFor
-        ? urlFor(sanityArticle.featuredImage).width(800).height(450).url()
-        : "/placeholder.svg",
+    image: imageUrl,
     date: new Date(sanityArticle.publishedAt).toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
@@ -191,13 +222,23 @@ export const getFeaturedArticlesAsync = async (): Promise<Article[]> => {
         title,
         slug,
         publishedAt,
-        image,
+        image {
+          asset->{
+            _id,
+            url
+          },
+          alt
+        },
         body,
         featured
       }`)
 
+      console.log("Featured posts from Sanity:", sanityPosts)
+
       if (sanityPosts && sanityPosts.length > 0) {
-        return sanityPosts.map(transformSanityPost)
+        const transformedPosts = sanityPosts.map(transformSanityPost)
+        console.log("Transformed featured posts:", transformedPosts)
+        return transformedPosts
       }
 
       // Fallback to articles
@@ -218,8 +259,13 @@ export const getLatestArticlesAsync = async (): Promise<Article[]> => {
     if (sanityConfigured && client) {
       // Try to fetch latest posts first
       const sanityPosts = await client.fetch(LATEST_POSTS_QUERY)
+
+      console.log("Latest posts from Sanity:", sanityPosts)
+
       if (sanityPosts && sanityPosts.length > 0) {
-        return sanityPosts.map(transformSanityPost)
+        const transformedPosts = sanityPosts.map(transformSanityPost)
+        console.log("Transformed latest posts:", transformedPosts)
+        return transformedPosts
       }
 
       // Fallback to articles
