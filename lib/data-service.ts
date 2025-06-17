@@ -2,124 +2,130 @@ import { client, sanityConfigured, LATEST_ARTICLES_QUERY, ARTICLES_QUERY, ALL_PO
 import type { Article, PodcastEpisode, VideoContent } from "@/lib/types"
 
 /**
- * Data Service - COMPREHENSIVE IMAGE URL HANDLING
+ * Data Service - FOCUSED IMAGE URL DEBUGGING
  */
 
-// Comprehensive image URL extraction function
+// Ultra-comprehensive image URL extraction with detailed logging
 function getSanityImageUrl(imageField: any, width = 800, height = 450): string {
-  console.log("🖼️ PROCESSING IMAGE FIELD:")
-  console.log("Type:", typeof imageField)
-  console.log("Value:", JSON.stringify(imageField, null, 2))
+  console.log("\n🖼️ === IMAGE URL EXTRACTION START ===")
+  console.log("Input imageField:", JSON.stringify(imageField, null, 2))
+  console.log("Input type:", typeof imageField)
+  console.log("Is null/undefined:", imageField == null)
 
   if (!imageField) {
-    console.log("❌ No image field provided")
+    console.log("❌ RESULT: No image field - returning placeholder")
     return "/placeholder.svg"
   }
 
-  // Method 1: Direct URL in asset (most common for media library)
+  // Method 1: Direct asset URL (most reliable)
   if (imageField.asset?.url) {
-    console.log("✅ METHOD 1: Found asset.url:", imageField.asset.url)
+    console.log("✅ METHOD 1 SUCCESS: Found asset.url")
+    console.log("URL:", imageField.asset.url)
+    console.log("🎯 FINAL RESULT:", imageField.asset.url)
     return imageField.asset.url
   }
 
-  // Method 2: URL directly in image field
+  // Method 2: Direct URL in image field
   if (imageField.url) {
-    console.log("✅ METHOD 2: Found direct url:", imageField.url)
+    console.log("✅ METHOD 2 SUCCESS: Found direct url")
+    console.log("URL:", imageField.url)
+    console.log("🎯 FINAL RESULT:", imageField.url)
     return imageField.url
   }
 
-  // Method 3: String URL (sometimes Sanity returns just the URL string)
+  // Method 3: String URL
   if (typeof imageField === "string") {
-    if (imageField.includes("cdn.sanity.io")) {
-      console.log("✅ METHOD 3: String CDN URL:", imageField)
+    if (imageField.includes("cdn.sanity.io") || imageField.includes("sanity.io")) {
+      console.log("✅ METHOD 3 SUCCESS: String CDN URL")
+      console.log("URL:", imageField)
+      console.log("🎯 FINAL RESULT:", imageField)
       return imageField
     }
     if (imageField.startsWith("/")) {
-      console.log("✅ METHOD 3: Local path:", imageField)
+      console.log("✅ METHOD 3 SUCCESS: Local path")
+      console.log("Path:", imageField)
+      console.log("🎯 FINAL RESULT:", imageField)
       return imageField
     }
   }
 
-  // Method 4: Build URL from asset reference
-  if (imageField.asset?._ref || imageField._ref) {
+  // Method 4: Build from asset reference
+  const assetRef = imageField.asset?._ref || imageField._ref
+  if (assetRef) {
     const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID
     const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET || "production"
-    const assetRef = imageField.asset?._ref || imageField._ref
 
-    console.log("🔧 METHOD 4: Building URL from reference")
-    console.log("  - Project ID:", projectId)
-    console.log("  - Dataset:", dataset)
-    console.log("  - Asset Ref:", assetRef)
+    console.log("🔧 METHOD 4: Building from reference")
+    console.log("Asset ref:", assetRef)
+    console.log("Project ID:", projectId)
+    console.log("Dataset:", dataset)
 
-    if (projectId && dataset && assetRef) {
+    if (projectId && dataset) {
       // Handle image references
       if (assetRef.startsWith("image-")) {
         const match = assetRef.match(/image-([a-f\d]+)-(\d+x\d+)-(\w+)/)
         if (match) {
           const [, id, dimensions, format] = match
           const url = `https://cdn.sanity.io/images/${projectId}/${dataset}/${id}-${dimensions}.${format}`
-          console.log("✅ METHOD 4: Built image URL:", url)
+          console.log("✅ METHOD 4 SUCCESS: Built image URL")
+          console.log("Built URL:", url)
+          console.log("🎯 FINAL RESULT:", url)
           return url
         }
       }
 
-      // Handle file references (for media library files)
+      // Handle file references
       if (assetRef.startsWith("file-")) {
         const match = assetRef.match(/file-([a-f\d]+)-(\w+)/)
         if (match) {
           const [, id, format] = match
           const url = `https://cdn.sanity.io/files/${projectId}/${dataset}/${id}.${format}`
-          console.log("✅ METHOD 4: Built file URL:", url)
+          console.log("✅ METHOD 4 SUCCESS: Built file URL")
+          console.log("Built URL:", url)
+          console.log("🎯 FINAL RESULT:", url)
           return url
         }
       }
     }
   }
 
-  // Method 5: Check for nested structures
-  if (imageField.asset && typeof imageField.asset === "object") {
-    console.log("🔧 METHOD 5: Checking nested asset structure")
+  // Method 5: Check all possible nested structures
+  console.log("🔧 METHOD 5: Checking nested structures")
+  const possibleUrls = [
+    imageField.asset?.asset?.url,
+    imageField.asset?.src,
+    imageField.asset?.href,
+    imageField.src,
+    imageField.href,
+    imageField.image?.url,
+    imageField.image?.asset?.url,
+  ]
 
-    // Sometimes the URL is nested deeper
-    const nestedUrl =
-      imageField.asset.url || imageField.asset.asset?.url || imageField.asset.src || imageField.asset.href
-
-    if (nestedUrl) {
-      console.log("✅ METHOD 5: Found nested URL:", nestedUrl)
-      return nestedUrl
+  for (const url of possibleUrls) {
+    if (url && typeof url === "string") {
+      console.log("✅ METHOD 5 SUCCESS: Found nested URL")
+      console.log("URL:", url)
+      console.log("🎯 FINAL RESULT:", url)
+      return url
     }
   }
 
-  // Method 6: Check if it's a Sanity reference object
-  if (imageField._type === "reference" && imageField._ref) {
-    console.log("🔧 METHOD 6: Reference type detected, may need to resolve")
-    // This would require a separate query to resolve the reference
-    // For now, we'll try to build the URL if it looks like an image reference
-    const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID
-    const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET || "production"
+  console.log("❌ ALL METHODS FAILED")
+  console.log("Final imageField keys:", Object.keys(imageField || {}))
+  console.log("🎯 FINAL RESULT: /placeholder.svg")
+  console.log("=== IMAGE URL EXTRACTION END ===\n")
 
-    if (projectId && dataset && imageField._ref.startsWith("image-")) {
-      const match = imageField._ref.match(/image-([a-f\d]+)-(\d+x\d+)-(\w+)/)
-      if (match) {
-        const [, id, dimensions, format] = match
-        const url = `https://cdn.sanity.io/images/${projectId}/${dataset}/${id}-${dimensions}.${format}`
-        console.log("✅ METHOD 6: Built URL from reference:", url)
-        return url
-      }
-    }
-  }
-
-  console.log("❌ ALL METHODS FAILED - Using placeholder")
-  console.log("Final imageField structure:", JSON.stringify(imageField, null, 2))
   return "/placeholder.svg"
 }
 
-// Transform Sanity post data to our Article type
+// Transform Sanity post with enhanced logging
 function transformSanityPost(sanityPost: any): Article {
-  console.log("\n🔄 TRANSFORMING POST:", sanityPost.title)
-  console.log("Raw post data:", JSON.stringify(sanityPost, null, 2))
+  console.log("\n🔄 === POST TRANSFORMATION START ===")
+  console.log("Post ID:", sanityPost._id)
+  console.log("Post title:", sanityPost.title)
+  console.log("Post slug:", sanityPost.slug?.current)
 
-  // Extract excerpt from body
+  // Extract excerpt
   let excerpt = "No excerpt available"
   if (sanityPost.body && Array.isArray(sanityPost.body)) {
     const textBlock = sanityPost.body.find(
@@ -128,7 +134,6 @@ function transformSanityPost(sanityPost: any): Article {
 
     if (textBlock) {
       const textSpan = textBlock.children.find((child: any) => child._type === "span" && child.text)
-
       if (textSpan && textSpan.text) {
         excerpt = textSpan.text.substring(0, 200) + "..."
       }
@@ -136,7 +141,10 @@ function transformSanityPost(sanityPost: any): Article {
   }
 
   const cleanSlug = sanityPost.slug?.current?.trim() || ""
+
+  console.log("🖼️ About to process image for:", sanityPost.title)
   const imageUrl = getSanityImageUrl(sanityPost.image, 800, 450)
+  console.log("🖼️ Image processing complete. Result:", imageUrl)
 
   const result = {
     id: sanityPost._id,
@@ -154,19 +162,17 @@ function transformSanityPost(sanityPost: any): Article {
     sportTags: [],
   }
 
-  console.log("✅ TRANSFORMATION RESULT:")
-  console.log("  - Title:", result.title)
-  console.log("  - Image URL:", result.image)
-  console.log("  - Slug:", cleanSlug)
-  console.log("  - Article URL:", result.url)
+  console.log("✅ TRANSFORMATION COMPLETE")
+  console.log("Final article image URL:", result.image)
+  console.log("=== POST TRANSFORMATION END ===\n")
 
   return result
 }
 
-// Transform Sanity article data to our Article type
+// Transform Sanity article with enhanced logging
 function transformSanityArticle(sanityArticle: any): Article {
-  console.log("\n🔄 TRANSFORMING ARTICLE:", sanityArticle.title)
-  console.log("Raw article data:", JSON.stringify(sanityArticle, null, 2))
+  console.log("\n🔄 === ARTICLE TRANSFORMATION START ===")
+  console.log("Article title:", sanityArticle.title)
 
   const cleanSlug = sanityArticle.slug?.current?.trim() || ""
   const imageUrl = getSanityImageUrl(sanityArticle.featuredImage, 800, 450)
@@ -187,9 +193,9 @@ function transformSanityArticle(sanityArticle: any): Article {
     sportTags: sanityArticle.sportTags || [],
   }
 
-  console.log("✅ ARTICLE TRANSFORMATION RESULT:")
-  console.log("  - Title:", transformed.title)
-  console.log("  - Image URL:", transformed.image)
+  console.log("✅ ARTICLE TRANSFORMATION COMPLETE")
+  console.log("Final article image URL:", transformed.image)
+  console.log("=== ARTICLE TRANSFORMATION END ===\n")
 
   return transformed
 }
@@ -336,52 +342,74 @@ export const getLatestArticles = (): Article[] => {
   ]
 }
 
-// MAIN ASYNC FUNCTIONS - Enhanced with comprehensive image handling
+// Enhanced async functions with comprehensive logging
 export const getFeaturedArticlesAsync = async (): Promise<Article[]> => {
-  console.log("\n🚀 STARTING getFeaturedArticlesAsync")
+  console.log("\n🚀 === FEATURED ARTICLES ASYNC START ===")
 
   try {
     if (sanityConfigured && client) {
       console.log("✅ Sanity configured - fetching posts...")
 
-      // Comprehensive query to get ALL possible image data structures
+      // Enhanced query with asset resolution
       const sanityPosts = await client.fetch(`*[_type == "post"] | order(publishedAt desc) [0...5] {
         _id,
         title,
         slug,
         publishedAt,
-        image,
+        image {
+          ...,
+          asset-> {
+            _id,
+            _type,
+            url,
+            originalFilename,
+            size,
+            metadata {
+              dimensions {
+                width,
+                height
+              }
+            }
+          }
+        },
         body,
         featured
       }`)
 
-      console.log("📊 SANITY QUERY RESULT:")
-      console.log("  - Total posts found:", sanityPosts?.length || 0)
+      console.log("📊 QUERY RESULTS:")
+      console.log("  - Posts found:", sanityPosts?.length || 0)
 
       if (sanityPosts && sanityPosts.length > 0) {
-        console.log("\n🔍 DETAILED POST ANALYSIS:")
+        console.log("\n🔍 RAW POST DATA ANALYSIS:")
         sanityPosts.forEach((post: any, index: number) => {
-          console.log(`\n--- POST ${index + 1} ---`)
+          console.log(`\n--- RAW POST ${index + 1} ---`)
           console.log("Title:", post.title)
+          console.log("Has image field:", !!post.image)
           console.log("Image field type:", typeof post.image)
-          console.log("Image field:", JSON.stringify(post.image, null, 2))
+          console.log("Has asset:", !!post.image?.asset)
+          console.log("Asset URL:", post.image?.asset?.url)
+          console.log("Full image field:", JSON.stringify(post.image, null, 2))
         })
 
+        console.log("\n🔄 STARTING TRANSFORMATIONS...")
         const transformedPosts = sanityPosts.map(transformSanityPost)
-        console.log("\n🎉 TRANSFORMATION COMPLETE")
-        console.log("  - Transformed posts count:", transformedPosts.length)
 
-        // Log final results
+        console.log("\n🎉 TRANSFORMATION SUMMARY:")
         transformedPosts.forEach((post, index) => {
-          console.log(`  - Post ${index + 1}: ${post.title} -> ${post.image}`)
+          console.log(`  ${index + 1}. ${post.title}`)
+          console.log(`     Image: ${post.image}`)
+          console.log(`     Is placeholder: ${post.image.includes("placeholder")}`)
         })
 
+        console.log("=== FEATURED ARTICLES ASYNC END ===\n")
         return transformedPosts
       } else {
         console.log("❌ No posts found in Sanity")
       }
     } else {
       console.log("❌ Sanity not configured")
+      console.log("  - sanityConfigured:", sanityConfigured)
+      console.log("  - client exists:", !!client)
     }
 
     console.log("🔄 FALLING BACK TO STATIC DATA")
@@ -393,25 +421,40 @@ export const getFeaturedArticlesAsync = async (): Promise<Article[]> => {
 }
 
 export const getLatestArticlesAsync = async (): Promise<Article[]> => {
-  console.log("\n🚀 getLatestArticlesAsync called")
+  console.log("\n🚀 === LATEST ARTICLES ASYNC START ===")
 
   try {
     if (sanityConfigured && client) {
-      console.log("✅ Sanity is configured, fetching latest posts...")
+      console.log("✅ Sanity configured - fetching latest posts...")
 
       const sanityPosts = await client.fetch(`*[_type == "post"] | order(publishedAt desc) [0...6] {
         _id,
         title,
         slug,
         publishedAt,
-        image,
+        image {
+          ...,
+          asset-> {
+            _id,
+            _type,
+            url,
+            originalFilename,
+            size,
+            metadata {
+              dimensions {
+                width,
+                height
+              }
+            }
+          }
+        },
         body,
         featured
       }`)
 
       if (sanityPosts && sanityPosts.length > 0) {
         const transformedPosts = sanityPosts.map(transformSanityPost)
-        console.log("✨ Transformed latest posts count:", transformedPosts.length)
+        console.log("✨ Latest posts transformed:", transformedPosts.length)
         return transformedPosts
       }
 
@@ -423,7 +466,7 @@ export const getLatestArticlesAsync = async (): Promise<Article[]> => {
         return sanityArticles.map(transformSanityArticle)
       }
     } else {
-      console.log("❌ Sanity not configured, using static data")
+      console.log("❌ Sanity not configured for latest articles")
     }
 
     console.log("🔄 Falling back to static latest articles")
