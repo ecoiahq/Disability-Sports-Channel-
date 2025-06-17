@@ -17,31 +17,98 @@ interface ArticlePageProps {
 // Disable static generation for now to allow dynamic routing
 export const dynamic = "force-dynamic"
 
-// Helper function to get image URL from Sanity
+// Enhanced helper function to get image URL from Sanity with CDN URL detection
 function getSanityImageUrl(imageField: any, width = 1200, height = 675): string {
-  if (!imageField) return "/placeholder.svg"
+  console.log("🖼️ getSanityImageUrl called with:", { imageField, width, height })
 
-  // If it's a direct asset URL
-  if (imageField.asset?.url) {
-    return imageField.asset.url
+  if (!imageField) {
+    console.log("❌ No image field provided")
+    return "/placeholder.svg"
   }
 
-  // If we can use urlFor to build the URL
-  if (urlFor && imageField) {
-    try {
-      const url = urlFor(imageField).width(width).height(height).url()
-      return url || "/placeholder.svg"
-    } catch (error) {
-      console.error("Error generating image URL:", error)
-      return "/placeholder.svg"
+  // Method 1: Check if it's already a Sanity CDN URL
+  if (typeof imageField === "string") {
+    if (imageField.includes("cdn.sanity.io/images")) {
+      console.log("✅ Using existing Sanity CDN URL:", imageField)
+      // Optionally add width and height parameters if needed
+      const url = new URL(imageField)
+      url.searchParams.set("w", width.toString())
+      url.searchParams.set("h", height.toString())
+      url.searchParams.set("fit", "crop")
+      url.searchParams.set("auto", "format")
+      return url.toString()
+    }
+
+    // Handle local file paths
+    if (imageField.startsWith("/") || imageField.startsWith("http")) {
+      console.log("✅ Using local/external URL:", imageField)
+      return imageField
     }
   }
 
-  // If it's already a string URL
-  if (typeof imageField === "string") {
-    return imageField
+  // Method 2: Check if it's a Sanity asset reference
+  if (imageField.asset) {
+    // Direct asset URL (most reliable)
+    if (imageField.asset.url) {
+      console.log("✅ Using direct asset URL:", imageField.asset.url)
+      return imageField.asset.url
+    }
+
+    // Build URL manually from asset reference
+    if (imageField.asset._ref && imageField.asset._ref.startsWith("image-")) {
+      const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID
+      const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET || "production"
+
+      if (projectId && dataset) {
+        const assetId = imageField.asset._ref
+        // Parse asset reference: image-{id}-{dimensions}-{format}
+        const match = assetId.match(/image-([a-f\d]+)-(\d+x\d+)-(\w+)/)
+
+        if (match) {
+          const [, id, dimensions, format] = match
+          const manualUrl = `https://cdn.sanity.io/images/${projectId}/${dataset}/${id}-${dimensions}.${format}?w=${width}&h=${height}&fit=crop&auto=format`
+          console.log("✅ Generated manual URL:", manualUrl)
+          return manualUrl
+        } else {
+          console.warn("❌ Invalid asset reference format:", assetId)
+        }
+      }
+    }
+
+    // Use urlFor builder (only for valid Sanity assets)
+    if (urlFor && imageField.asset._ref && imageField.asset._ref.startsWith("image-")) {
+      try {
+        const urlBuilder = urlFor(imageField)
+        if (urlBuilder) {
+          const url = urlBuilder.width(width).height(height).fit("crop").auto("format").url()
+          console.log("✅ Generated URL with urlFor:", url)
+          return url || "/placeholder.svg"
+        }
+      } catch (error) {
+        console.error("❌ Error with urlFor:", error)
+      }
+    }
   }
 
+  // Method 3: If it's a direct Sanity asset object without nested structure
+  if (imageField._ref && imageField._ref.startsWith("image-")) {
+    const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID
+    const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET || "production"
+
+    if (projectId && dataset) {
+      const assetId = imageField._ref
+      const match = assetId.match(/image-([a-f\d]+)-(\d+x\d+)-(\w+)/)
+
+      if (match) {
+        const [, id, dimensions, format] = match
+        const manualUrl = `https://cdn.sanity.io/images/${projectId}/${dataset}/${id}-${dimensions}.${format}?w=${width}&h=${height}&fit=crop&auto=format`
+        console.log("✅ Generated manual URL from direct ref:", manualUrl)
+        return manualUrl
+      }
+    }
+  }
+
+  console.log("❌ All methods failed, using placeholder")
   return "/placeholder.svg"
 }
 
@@ -327,7 +394,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     day: "numeric",
   })
 
-  // Use the helper function to get the proper image URL
+  // Use the enhanced helper function to get the proper image URL
   const imageUrl = getSanityImageUrl(article.featuredImage, 1200, 675)
 
   return (
