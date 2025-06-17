@@ -1,9 +1,9 @@
 import { notFound } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
-import { Calendar, User, ArrowLeft } from "lucide-react"
+import { Calendar, User, ArrowLeft } from 'lucide-react'
 import { Button } from "@/components/ui/button"
-import { client, POST_BY_SLUG_QUERY, ARTICLE_BY_SLUG_QUERY, urlFor, sanityConfigured } from "@/lib/sanity"
+import { client, POST_BY_SLUG_QUERY, ARTICLE_BY_SLUG_QUERY, urlFor, sanityConfigured, fetchAllSlugs } from "@/lib/sanity"
 import { PortableText } from "@portabletext/react"
 import SiteHeader from "@/components/site-header"
 import EnhancedFooter from "@/components/enhanced-footer"
@@ -12,6 +12,14 @@ interface ArticlePageProps {
   params: {
     slug: string
   }
+}
+
+// Generate static params for all articles
+export async function generateStaticParams() {
+  const slugs = await fetchAllSlugs()
+  return slugs.map((item: any) => ({
+    slug: item.slug,
+  }))
 }
 
 // Custom PortableText components for proper formatting
@@ -166,10 +174,20 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     day: "numeric",
   })
 
-  const imageUrl =
-    article.featuredImage && urlFor
-      ? urlFor(article.featuredImage).width(1200).height(675).url()
-      : article.featuredImage || "/placeholder.svg"
+  // Fix image URL generation
+  let imageUrl = "/placeholder.svg"
+  if (article.featuredImage) {
+    if (urlFor && article.featuredImage.asset) {
+      // Sanity image with asset reference
+      imageUrl = urlFor(article.featuredImage).width(1200).height(675).url()
+    } else if (typeof article.featuredImage === 'string') {
+      // Direct URL
+      imageUrl = article.featuredImage
+    } else if (article.featuredImage.asset?.url) {
+      // Direct asset URL
+      imageUrl = article.featuredImage.asset.url
+    }
+  }
 
   return (
     <div className="flex min-h-screen flex-col bg-black text-white">

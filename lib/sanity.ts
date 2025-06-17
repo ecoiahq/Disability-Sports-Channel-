@@ -29,20 +29,27 @@ export const serverClient = sanityConfigured
     })
   : null
 
+// Image URL builder - fix the image URL generation
 const builder = sanityConfigured && client ? imageUrlBuilder(client) : null
 
 export function urlFor(source: any) {
-  if (!builder) return null
+  if (!builder || !source) return null
   return builder.image(source)
 }
 
-// GROQ queries for Posts (your current content)
+// GROQ queries for Posts (your current content) - Updated to include image asset reference
 export const FEATURED_POSTS_QUERY = `*[_type == "post" && featured == true] | order(publishedAt desc) [0...2] {
   _id,
   title,
   slug,
   publishedAt,
-  image,
+  image {
+    asset->{
+      _id,
+      url
+    },
+    alt
+  },
   body,
   featured
 }`
@@ -52,7 +59,13 @@ export const LATEST_POSTS_QUERY = `*[_type == "post"] | order(publishedAt desc) 
   title,
   slug,
   publishedAt,
-  image,
+  image {
+    asset->{
+      _id,
+      url
+    },
+    alt
+  },
   body,
   featured
 }`
@@ -62,7 +75,13 @@ export const ALL_POSTS_QUERY = `*[_type == "post"] | order(publishedAt desc) {
   title,
   slug,
   publishedAt,
-  image,
+  image {
+    asset->{
+      _id,
+      url
+    },
+    alt
+  },
   body,
   featured
 }`
@@ -72,7 +91,13 @@ export const POST_BY_SLUG_QUERY = `*[_type == "post" && slug.current == $slug][0
   title,
   slug,
   publishedAt,
-  image,
+  image {
+    asset->{
+      _id,
+      url
+    },
+    alt
+  },
   body,
   featured
 }`
@@ -83,7 +108,13 @@ export const ARTICLES_QUERY = `*[_type == "article"] | order(publishedAt desc) {
   title,
   slug,
   excerpt,
-  featuredImage,
+  featuredImage {
+    asset->{
+      _id,
+      url
+    },
+    alt
+  },
   publishedAt,
   featured,
   sportTags,
@@ -102,7 +133,13 @@ export const FEATURED_ARTICLES_QUERY = `*[_type == "article" && featured == true
   title,
   slug,
   excerpt,
-  featuredImage,
+  featuredImage {
+    asset->{
+      _id,
+      url
+    },
+    alt
+  },
   publishedAt,
   sportTags,
   author->{
@@ -120,7 +157,13 @@ export const LATEST_ARTICLES_QUERY = `*[_type == "article"] | order(publishedAt 
   title,
   slug,
   excerpt,
-  featuredImage,
+  featuredImage {
+    asset->{
+      _id,
+      url
+    },
+    alt
+  },
   publishedAt,
   sportTags,
   author->{
@@ -139,7 +182,13 @@ export const ARTICLE_BY_SLUG_QUERY = `*[_type == "article" && slug.current == $s
   slug,
   excerpt,
   content,
-  featuredImage,
+  featuredImage {
+    asset->{
+      _id,
+      url
+    },
+    alt
+  },
   publishedAt,
   sportTags,
   author->{
@@ -163,7 +212,13 @@ export const COMBINED_FEATURED_QUERY = `*[(_type == "post" || _type == "article"
   publishedAt,
   featured,
   "excerpt": select(_type == "post" => body[0].children[0].text[0...150], excerpt),
-  "featuredImage": select(_type == "post" => image, featuredImage),
+  "featuredImage": select(_type == "post" => image, featuredImage) {
+    asset->{
+      _id,
+      url
+    },
+    alt
+  },
   "author": select(_type == "article" => author->{name, slug}, null),
   "category": select(_type == "article" => category->{title, slug}, null),
   "sportTags": select(_type == "article" => sportTags, [])
@@ -177,10 +232,22 @@ export const COMBINED_LATEST_QUERY = `*[_type == "post" || _type == "article"] |
   publishedAt,
   featured,
   "excerpt": select(_type == "post" => body[0].children[0].text[0...150], excerpt),
-  "featuredImage": select(_type == "post" => image, featuredImage),
+  "featuredImage": select(_type == "post" => image, featuredImage) {
+    asset->{
+      _id,
+      url
+    },
+    alt
+  },
   "author": select(_type == "article" => author->{name, slug}, null),
   "category": select(_type == "article" => category->{title, slug}, null),
   "sportTags": select(_type == "article" => sportTags, [])
+}`
+
+// Get all slugs for static generation
+export const ALL_SLUGS_QUERY = `*[_type == "post" || _type == "article"] {
+  "slug": slug.current,
+  _type
 }`
 
 // Cached fetch functions
@@ -234,6 +301,18 @@ export async function fetchLatestArticles() {
     )
   } catch (error) {
     console.error("Error fetching latest articles:", error)
+    return []
+  }
+}
+
+// Fetch all slugs for dynamic routing
+export async function fetchAllSlugs() {
+  if (!sanityConfigured || !client) return []
+
+  try {
+    return await client.fetch(ALL_SLUGS_QUERY)
+  } catch (error) {
+    console.error("Error fetching slugs:", error)
     return []
   }
 }
