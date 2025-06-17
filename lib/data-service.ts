@@ -4,7 +4,6 @@ import {
   FEATURED_ARTICLES_QUERY,
   LATEST_ARTICLES_QUERY,
   ARTICLES_QUERY,
-  FEATURED_POSTS_QUERY,
   LATEST_POSTS_QUERY,
   ALL_POSTS_QUERY,
   urlFor,
@@ -180,8 +179,17 @@ export const getLatestArticles = (): Article[] => {
 export const getFeaturedArticlesAsync = async (): Promise<Article[]> => {
   try {
     if (sanityConfigured && client) {
-      // Try to fetch featured posts first
-      const sanityPosts = await client.fetch(FEATURED_POSTS_QUERY)
+      // Get the latest 2 posts automatically as featured (no need for featured checkbox)
+      const sanityPosts = await client.fetch(`*[_type == "post"] | order(publishedAt desc) [0...2] {
+        _id,
+        title,
+        slug,
+        publishedAt,
+        image,
+        body,
+        featured
+      }`)
+
       if (sanityPosts && sanityPosts.length > 0) {
         return sanityPosts.map(transformSanityPost)
       }

@@ -3,7 +3,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { Calendar, User, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { client, ARTICLE_BY_SLUG_QUERY, urlFor, sanityConfigured } from "@/lib/sanity"
+import { client, POST_BY_SLUG_QUERY, ARTICLE_BY_SLUG_QUERY, urlFor, sanityConfigured } from "@/lib/sanity"
 import { PortableText } from "@portabletext/react"
 import SiteHeader from "@/components/site-header"
 import EnhancedFooter from "@/components/enhanced-footer"
@@ -17,6 +17,31 @@ interface ArticlePageProps {
 async function getArticle(slug: string) {
   try {
     if (sanityConfigured && client) {
+      // Try to fetch post first
+      const post = await client.fetch(POST_BY_SLUG_QUERY, { slug })
+      if (post) {
+        // Transform post to article format
+        const excerpt =
+          post.body
+            ?.find((block: any) => block._type === "block")
+            ?.children?.find((child: any) => child._type === "span")
+            ?.text?.substring(0, 200) + "..." || "No excerpt available"
+
+        return {
+          _id: post._id,
+          title: post.title,
+          slug: post.slug,
+          excerpt: excerpt,
+          content: post.body,
+          featuredImage: post.image,
+          publishedAt: post.publishedAt,
+          author: { name: "Admin" },
+          category: { title: "News" },
+          sportTags: [],
+        }
+      }
+
+      // Fallback to article
       const article = await client.fetch(ARTICLE_BY_SLUG_QUERY, { slug })
       if (article) return article
     }
