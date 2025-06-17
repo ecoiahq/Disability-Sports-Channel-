@@ -1,169 +1,92 @@
 import { createClient } from "next-sanity"
-import imageUrlBuilder from "@sanity/image-url"
 
-// Check if Sanity is configured
-const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID
-const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET || "production"
+const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID!
+const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET!
 const apiVersion = process.env.NEXT_PUBLIC_SANITY_API_VERSION || "2024-01-01"
 
-export const sanityConfigured = !!(projectId && dataset)
-
-// Create client configuration
-const config = {
-  projectId: projectId || "",
+export const client = createClient({
+  projectId,
   dataset,
   apiVersion,
-  useCdn: process.env.NODE_ENV === "production",
-  perspective: "published" as const,
-}
+  useCdn: false,
+})
 
-// Only create client if Sanity is configured
-export const client = sanityConfigured ? createClient(config) : null
+// Check if Sanity is properly configured
+export const sanityConfigured = !!(projectId && dataset)
 
-// Create client for server-side operations (with token if needed)
-export const serverClient = sanityConfigured
-  ? createClient({
-      ...config,
-      useCdn: false,
-      token: process.env.SANITY_API_TOKEN,
-    })
-  : null
+// GROQ queries for both Post and Article content types
+export const FEATURED_POSTS_QUERY = `*[_type == "post" && featured == true] | order(publishedAt desc) {
+  _id,
+  title,
+  slug,
+  publishedAt,
+  image,
+  body,
+  featured
+}`
 
-const builder = sanityConfigured && client ? imageUrlBuilder(client) : null
+export const LATEST_POSTS_QUERY = `*[_type == "post"] | order(publishedAt desc) [0...10] {
+  _id,
+  title,
+  slug,
+  publishedAt,
+  image,
+  body,
+  featured
+}`
 
-export function urlFor(source: any) {
-  if (!builder) return null
-  return builder.image(source)
-}
+export const ALL_POSTS_QUERY = `*[_type == "post"] | order(publishedAt desc) {
+  _id,
+  title,
+  slug,
+  publishedAt,
+  image,
+  body,
+  featured
+}`
 
-// GROQ queries with caching tags
+// Keep existing article queries for backward compatibility
+export const FEATURED_ARTICLES_QUERY = `*[_type == "article" && featured == true] | order(publishedAt desc) {
+  _id,
+  title,
+  slug,
+  excerpt,
+  featuredImage,
+  author->{name},
+  category->{title},
+  publishedAt,
+  sportTags
+}`
+
+export const LATEST_ARTICLES_QUERY = `*[_type == "article"] | order(publishedAt desc) [0...10] {
+  _id,
+  title,
+  slug,
+  excerpt,
+  featuredImage,
+  author->{name},
+  category->{title},
+  publishedAt,
+  sportTags
+}`
+
 export const ARTICLES_QUERY = `*[_type == "article"] | order(publishedAt desc) {
   _id,
   title,
   slug,
   excerpt,
   featuredImage,
+  author->{name},
+  category->{title},
   publishedAt,
-  featured,
-  sportTags,
-  author->{
-    name,
-    slug
-  },
-  category->{
-    title,
-    slug
-  }
+  sportTags
 }`
 
-export const FEATURED_ARTICLES_QUERY = `*[_type == "article" && featured == true] | order(publishedAt desc) [0...2] {
-  _id,
-  title,
-  slug,
-  excerpt,
-  featuredImage,
-  publishedAt,
-  sportTags,
-  author->{
-    name,
-    slug
-  },
-  category->{
-    title,
-    slug
-  }
-}`
+// Image URL builder
+import imageUrlBuilder from "@sanity/image-url"
 
-export const LATEST_ARTICLES_QUERY = `*[_type == "article"] | order(publishedAt desc) [0...6] {
-  _id,
-  title,
-  slug,
-  excerpt,
-  featuredImage,
-  publishedAt,
-  sportTags,
-  author->{
-    name,
-    slug
-  },
-  category->{
-    title,
-    slug
-  }
-}`
+const builder = imageUrlBuilder(client)
 
-export const ARTICLE_BY_SLUG_QUERY = `*[_type == "article" && slug.current == $slug][0] {
-  _id,
-  title,
-  slug,
-  excerpt,
-  content,
-  featuredImage,
-  publishedAt,
-  sportTags,
-  author->{
-    name,
-    slug,
-    image,
-    bio
-  },
-  category->{
-    title,
-    slug
-  }
-}`
-
-// Cached fetch functions
-export async function fetchArticles() {
-  if (!sanityConfigured || !client) return []
-
-  try {
-    return await client.fetch(
-      ARTICLES_QUERY,
-      {},
-      {
-        cache: "force-cache",
-        next: { tags: ["articles"], revalidate: 60 },
-      },
-    )
-  } catch (error) {
-    console.error("Error fetching articles:", error)
-    return []
-  }
-}
-
-export async function fetchFeaturedArticles() {
-  if (!sanityConfigured || !client) return []
-
-  try {
-    return await client.fetch(
-      FEATURED_ARTICLES_QUERY,
-      {},
-      {
-        cache: "force-cache",
-        next: { tags: ["featured-articles"], revalidate: 60 },
-      },
-    )
-  } catch (error) {
-    console.error("Error fetching featured articles:", error)
-    return []
-  }
-}
-
-export async function fetchLatestArticles() {
-  if (!sanityConfigured || !client) return []
-
-  try {
-    return await client.fetch(
-      LATEST_ARTICLES_QUERY,
-      {},
-      {
-        cache: "force-cache",
-        next: { tags: ["latest-articles"], revalidate: 60 },
-      },
-    )
-  } catch (error) {
-    console.error("Error fetching latest articles:", error)
-    return []
-  }
+export function urlFor(source: any) {
+  return builder.image(source)
 }

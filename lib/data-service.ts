@@ -4,6 +4,9 @@ import {
   FEATURED_ARTICLES_QUERY,
   LATEST_ARTICLES_QUERY,
   ARTICLES_QUERY,
+  FEATURED_POSTS_QUERY,
+  LATEST_POSTS_QUERY,
+  ALL_POSTS_QUERY,
   urlFor,
 } from "@/lib/sanity"
 import type { Article, PodcastEpisode, VideoContent } from "@/lib/types"
@@ -14,6 +17,32 @@ import type { Article, PodcastEpisode, VideoContent } from "@/lib/types"
  * This file contains data functions for the application.
  * It tries to fetch from Sanity first, then falls back to static data.
  */
+
+// Transform Sanity post data to our Article type
+function transformSanityPost(sanityPost: any): Article {
+  // Extract first paragraph from body as excerpt
+  const excerpt =
+    sanityPost.body
+      ?.find((block: any) => block._type === "block")
+      ?.children?.find((child: any) => child._type === "span")
+      ?.text?.substring(0, 200) + "..." || "No excerpt available"
+
+  return {
+    id: sanityPost._id,
+    title: sanityPost.title,
+    excerpt: excerpt,
+    image: sanityPost.image && urlFor ? urlFor(sanityPost.image).width(800).height(450).url() : "/placeholder.svg",
+    date: new Date(sanityPost.publishedAt).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }),
+    author: "Admin", // Default author since posts don't have author references
+    category: "News", // Default category
+    url: `/news/${sanityPost.slug.current}`,
+    sportTags: [],
+  }
+}
 
 // Transform Sanity article data to our Article type
 function transformSanityArticle(sanityArticle: any): Article {
@@ -147,10 +176,17 @@ export const getLatestArticles = (): Article[] => {
   ]
 }
 
-// Async versions for when Sanity is configured
+// Async versions that check both Posts and Articles
 export const getFeaturedArticlesAsync = async (): Promise<Article[]> => {
   try {
     if (sanityConfigured && client) {
+      // Try to fetch featured posts first
+      const sanityPosts = await client.fetch(FEATURED_POSTS_QUERY)
+      if (sanityPosts && sanityPosts.length > 0) {
+        return sanityPosts.map(transformSanityPost)
+      }
+
+      // Fallback to articles
       const sanityArticles = await client.fetch(FEATURED_ARTICLES_QUERY)
       if (sanityArticles && sanityArticles.length > 0) {
         return sanityArticles.map(transformSanityArticle)
@@ -166,6 +202,13 @@ export const getFeaturedArticlesAsync = async (): Promise<Article[]> => {
 export const getLatestArticlesAsync = async (): Promise<Article[]> => {
   try {
     if (sanityConfigured && client) {
+      // Try to fetch latest posts first
+      const sanityPosts = await client.fetch(LATEST_POSTS_QUERY)
+      if (sanityPosts && sanityPosts.length > 0) {
+        return sanityPosts.map(transformSanityPost)
+      }
+
+      // Fallback to articles
       const sanityArticles = await client.fetch(LATEST_ARTICLES_QUERY)
       if (sanityArticles && sanityArticles.length > 0) {
         return sanityArticles.map(transformSanityArticle)
@@ -181,6 +224,13 @@ export const getLatestArticlesAsync = async (): Promise<Article[]> => {
 export const getAllArticlesAsync = async (): Promise<Article[]> => {
   try {
     if (sanityConfigured && client) {
+      // Try to fetch all posts first
+      const sanityPosts = await client.fetch(ALL_POSTS_QUERY)
+      if (sanityPosts && sanityPosts.length > 0) {
+        return sanityPosts.map(transformSanityPost)
+      }
+
+      // Fallback to articles
       const sanityArticles = await client.fetch(ARTICLES_QUERY)
       if (sanityArticles && sanityArticles.length > 0) {
         return sanityArticles.map(transformSanityArticle)
