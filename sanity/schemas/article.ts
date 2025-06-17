@@ -9,7 +9,6 @@ export default defineType({
       name: "title",
       title: "Title",
       type: "string",
-      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: "slug",
@@ -19,59 +18,31 @@ export default defineType({
         source: "title",
         maxLength: 96,
       },
-      validation: (Rule) => Rule.required(),
-    }),
-    defineField({
-      name: "excerpt",
-      title: "Excerpt",
-      type: "text",
-      rows: 3,
-      validation: (Rule) => Rule.required().max(200),
-    }),
-    defineField({
-      name: "content",
-      title: "Content",
-      type: "array",
-      of: [
-        {
-          type: "block",
-        },
-        {
-          type: "image",
-          options: {
-            hotspot: true,
-          },
-        },
-      ],
-    }),
-    defineField({
-      name: "featuredImage",
-      title: "Featured Image",
-      type: "image",
-      options: {
-        hotspot: true,
-      },
-      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: "author",
       title: "Author",
       type: "reference",
       to: { type: "author" },
-      validation: (Rule) => Rule.required(),
     }),
     defineField({
-      name: "category",
-      title: "Category",
-      type: "reference",
-      to: { type: "category" },
-      validation: (Rule) => Rule.required(),
+      name: "mainImage",
+      title: "Main image",
+      type: "image",
+      options: {
+        hotspot: true,
+      },
+    }),
+    defineField({
+      name: "categories",
+      title: "Categories",
+      type: "array",
+      of: [{ type: "reference", to: { type: "category" } }],
     }),
     defineField({
       name: "publishedAt",
       title: "Published at",
       type: "datetime",
-      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: "featured",
@@ -84,28 +55,20 @@ export default defineType({
       name: "sportTags",
       title: "Sport Tags",
       type: "array",
-      of: [{ type: "string" }],
-      options: {
-        list: [
-          { title: "Para Swimming", value: "para-swimming" },
-          { title: "Wheelchair Basketball", value: "wheelchair-basketball" },
-          { title: "Para Athletics", value: "para-athletics" },
-          { title: "Para Archery", value: "para-archery" },
-          { title: "Wheelchair Tennis", value: "wheelchair-tennis" },
-          { title: "Para Cycling", value: "para-cycling" },
-          { title: "Sitting Volleyball", value: "sitting-volleyball" },
-          { title: "Wheelchair Rugby", value: "wheelchair-rugby" },
-          { title: "Boccia", value: "boccia" },
-          { title: "Goalball", value: "goalball" },
-        ],
-      },
+      of: [{ type: "reference", to: { type: "sportTag" } }],
+    }),
+    defineField({
+      name: "body",
+      title: "Body",
+      type: "blockContent",
     }),
   ],
+
   preview: {
     select: {
       title: "title",
       author: "author.name",
-      media: "featuredImage",
+      media: "mainImage",
     },
     prepare(selection) {
       const { author } = selection
