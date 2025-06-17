@@ -26,6 +26,9 @@ function transformSanityPost(sanityPost: any): Article {
       ?.children?.find((child: any) => child._type === "span")
       ?.text?.substring(0, 200) + "..." || "No excerpt available"
 
+  // Sanitize slug by trimming spaces and ensuring it's clean
+  const cleanSlug = sanityPost.slug?.current?.trim() || ""
+
   return {
     id: sanityPost._id,
     title: sanityPost.title,
@@ -38,13 +41,16 @@ function transformSanityPost(sanityPost: any): Article {
     }),
     author: "Admin", // Default author since posts don't have author references
     category: "News", // Default category
-    url: `/news/${sanityPost.slug.current}`,
+    url: `/news/${cleanSlug}`,
     sportTags: [],
   }
 }
 
 // Transform Sanity article data to our Article type
 function transformSanityArticle(sanityArticle: any): Article {
+  // Sanitize slug by trimming spaces and ensuring it's clean
+  const cleanSlug = sanityArticle.slug?.current?.trim() || ""
+
   return {
     id: sanityArticle._id,
     title: sanityArticle.title,
@@ -60,7 +66,7 @@ function transformSanityArticle(sanityArticle: any): Article {
     }),
     author: sanityArticle.author?.name || "Unknown Author",
     category: sanityArticle.category?.title || "Uncategorized",
-    url: `/news/${sanityArticle.slug.current}`,
+    url: `/news/${cleanSlug}`,
     sportTags: sanityArticle.sportTags || [],
   }
 }

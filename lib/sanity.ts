@@ -4,7 +4,36 @@ import imageUrlBuilder from "@sanity/image-url"
 // Check if Sanity is configured
 const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID
 const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET || "production"
-const apiVersion = process.env.NEXT_PUBLIC_SANITY_API_VERSION || "2024-01-01"
+
+// Validate and clean the API version
+function getValidApiVersion(): string {
+  const envApiVersion = process.env.NEXT_PUBLIC_SANITY_API_VERSION
+
+  // If no environment variable, use default
+  if (!envApiVersion) {
+    return "2023-05-03"
+  }
+
+  // Clean the environment variable (remove whitespace)
+  const cleanVersion = envApiVersion.trim()
+
+  // Check if it's the legacy version "1"
+  if (cleanVersion === "1") {
+    return "1"
+  }
+
+  // Check if it matches YYYY-MM-DD format
+  const dateRegex = /^\d{4}-\d{2}-\d{2}$/
+  if (dateRegex.test(cleanVersion)) {
+    return cleanVersion
+  }
+
+  // If invalid format, use default
+  console.warn(`Invalid Sanity API version: ${cleanVersion}, using default`)
+  return "2023-05-03"
+}
+
+const apiVersion = getValidApiVersion()
 
 export const sanityConfigured = !!(projectId && dataset)
 
@@ -310,7 +339,14 @@ export async function fetchAllSlugs() {
   if (!sanityConfigured || !client) return []
 
   try {
-    return await client.fetch(ALL_SLUGS_QUERY)
+    const slugs = await client.fetch(ALL_SLUGS_QUERY)
+    // Clean up slugs by trimming whitespace
+    return slugs
+      .map((item: any) => ({
+        ...item,
+        slug: item.slug?.trim() || "",
+      }))
+      .filter((item: any) => item.slug) // Remove empty slugs
   } catch (error) {
     console.error("Error fetching slugs:", error)
     return []

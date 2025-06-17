@@ -1,9 +1,9 @@
 import { notFound } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
-import { Calendar, User, ArrowLeft } from 'lucide-react'
+import { Calendar, User, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { client, POST_BY_SLUG_QUERY, ARTICLE_BY_SLUG_QUERY, urlFor, sanityConfigured, fetchAllSlugs } from "@/lib/sanity"
+import { client, urlFor, sanityConfigured } from "@/lib/sanity"
 import { PortableText } from "@portabletext/react"
 import SiteHeader from "@/components/site-header"
 import EnhancedFooter from "@/components/enhanced-footer"
@@ -14,13 +14,8 @@ interface ArticlePageProps {
   }
 }
 
-// Generate static params for all articles
-export async function generateStaticParams() {
-  const slugs = await fetchAllSlugs()
-  return slugs.map((item: any) => ({
-    slug: item.slug,
-  }))
-}
+// Disable static generation for now to allow dynamic routing
+export const dynamic = "force-dynamic"
 
 // Custom PortableText components for proper formatting
 const portableTextComponents = {
@@ -97,9 +92,41 @@ const portableTextComponents = {
 
 async function getArticle(slug: string) {
   try {
+    // Sanitize the incoming slug parameter
+    const cleanSlug = slug.trim()
+
+    console.log(`Looking for article with slug: "${slug}" or clean slug: "${cleanSlug}"`)
+
     if (sanityConfigured && client) {
-      // Try to fetch post first
-      const post = await client.fetch(POST_BY_SLUG_QUERY, { slug })
+      // Try to fetch post first - with more flexible slug matching
+      const postQuery = `*[_type == "post" && (
+        slug.current == $slug || 
+        slug.current == $cleanSlug ||
+        slug.current == $trimmedSlug
+      )][0] {
+        _id,
+        title,
+        slug,
+        publishedAt,
+        image {
+          asset->{
+            _id,
+            url
+          },
+          alt
+        },
+        body,
+        featured
+      }`
+
+      const post = await client.fetch(postQuery, {
+        slug,
+        cleanSlug,
+        trimmedSlug: slug.replace(/^%20/, "").trim(), // Remove URL encoded space at start
+      })
+
+      console.log("Post query result:", post)
+
       if (post) {
         // Transform post to article format
         const excerpt =
@@ -122,12 +149,58 @@ async function getArticle(slug: string) {
         }
       }
 
-      // Fallback to article
-      const article = await client.fetch(ARTICLE_BY_SLUG_QUERY, { slug })
+      // Try to fetch all posts to debug
+      const allPosts = await client.fetch(`*[_type == "post"] {
+        _id,
+        title,
+        "slug": slug.current
+      }`)
+      console.log("All available posts:", allPosts)
+
+      // Fallback to article with flexible matching
+      const articleQuery = `*[_type == "article" && (
+        slug.current == $slug || 
+        slug.current == $cleanSlug ||
+        slug.current == $trimmedSlug
+      )][0] {
+        _id,
+        title,
+        slug,
+        excerpt,
+        content,
+        featuredImage {
+          asset->{
+            _id,
+            url
+          },
+          alt
+        },
+        publishedAt,
+        sportTags,
+        author->{
+          name,
+          slug,
+          image,
+          bio
+        },
+        category->{
+          title,
+          slug
+        }
+      }`
+
+      const article = await client.fetch(articleQuery, {
+        slug,
+        cleanSlug,
+        trimmedSlug: slug.replace(/^%20/, "").trim(),
+      })
+
+      console.log("Article query result:", article)
+
       if (article) return article
     }
 
-    // Fallback to static article data
+    // Fallback to static article data for testing
     const staticArticles = [
       {
         _id: "1",
@@ -152,9 +225,58 @@ async function getArticle(slug: string) {
         category: { title: "Para Swimming" },
         sportTags: ["para-swimming"],
       },
+      {
+        _id: "2",
+        title: "Patrick Anderson: The Unstoppable Force of Wheelchair Basketball",
+        slug: { current: "patrick-anderson-the-unstoppable-force-of-wheelchair-basketball" },
+        excerpt:
+          "Patrick Anderson has officially announced his retirement from wheelchair basketball, marking the end of an era for the sport. Widely regarded as the greatest player in wheelchair basketball history, Anderson's impact on the game cannot be overstated.",
+        content: [
+          {
+            _type: "block",
+            children: [
+              {
+                _type: "span",
+                text: "Patrick Anderson has officially announced his retirement from wheelchair basketball, marking the end of an era for the sport. Widely regarded as the greatest player in wheelchair basketball history, Anderson's impact on the game cannot be overstated. Over his illustrious career, he has won three Paralympic gold medals, led Canada to numerous international victories, and inspired countless athletes around the world.",
+              },
+            ],
+          },
+          {
+            _type: "block",
+            children: [
+              {
+                _type: "span",
+                text: "Born in Fergus, Ontario, Anderson lost both his legs in a drunk driving accident at the age of nine. Rather than let this define him negatively, he channeled his energy into sports, eventually discovering wheelchair basketball. His natural talent, combined with an unrelenting work ethic, quickly set him apart from his peers.",
+              },
+            ],
+          },
+        ],
+        featuredImage: "/wheelchair-basketball-action.png",
+        publishedAt: "2024-03-24T10:00:00Z",
+        author: { name: "Admin" },
+        category: { title: "News" },
+        sportTags: ["wheelchair-basketball"],
+      },
     ]
 
-    return staticArticles.find((article) => article.slug.current === slug) || null
+    // Try to match with various slug formats
+    const matchingSlugs = [
+      cleanSlug,
+      slug,
+      slug.replace(/^%20/, ""), // Remove URL encoded space
+      decodeURIComponent(slug).trim(), // Decode URL encoding
+    ]
+
+    for (const testSlug of matchingSlugs) {
+      const found = staticArticles.find((article) => article.slug.current === testSlug)
+      if (found) {
+        console.log(`Found static article with slug: ${testSlug}`)
+        return found
+      }
+    }
+
+    console.log(`No article found for any of these slugs:`, matchingSlugs)
+    return null
   } catch (error) {
     console.error("Error fetching article:", error)
     return null
@@ -162,9 +284,12 @@ async function getArticle(slug: string) {
 }
 
 export default async function ArticlePage({ params }: ArticlePageProps) {
+  console.log("ArticlePage called with slug:", params.slug)
+
   const article = await getArticle(params.slug)
 
   if (!article) {
+    console.log("Article not found, showing 404")
     notFound()
   }
 
@@ -180,7 +305,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     if (urlFor && article.featuredImage.asset) {
       // Sanity image with asset reference
       imageUrl = urlFor(article.featuredImage).width(1200).height(675).url()
-    } else if (typeof article.featuredImage === 'string') {
+    } else if (typeof article.featuredImage === "string") {
       // Direct URL
       imageUrl = article.featuredImage
     } else if (article.featuredImage.asset?.url) {
