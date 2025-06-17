@@ -6,10 +6,17 @@ export async function GET() {
     timestamp: new Date().toISOString(),
     sanityConfigured,
     environmentVariables: {
-      projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID ? "✓ Set" : "✗ Missing",
+      projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID
+        ? `✓ Set (${process.env.NEXT_PUBLIC_SANITY_PROJECT_ID.substring(0, 8)}...)`
+        : "✗ Missing",
       dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || "production",
-      apiVersion: process.env.NEXT_PUBLIC_SANITY_API_VERSION ? "✓ Set" : "✗ Missing",
-      token: process.env.SANITY_API_TOKEN ? "✓ Set" : "✗ Missing",
+      apiVersion: process.env.NEXT_PUBLIC_SANITY_API_VERSION
+        ? `✓ Set (${process.env.NEXT_PUBLIC_SANITY_API_VERSION})`
+        : "✗ Missing",
+      token: process.env.SANITY_API_TOKEN ? `✓ Set (${process.env.SANITY_API_TOKEN.substring(0, 8)}...)` : "✗ Missing",
+      // Add raw values for debugging
+      rawApiVersion: process.env.NEXT_PUBLIC_SANITY_API_VERSION,
+      rawToken: process.env.SANITY_API_TOKEN ? "EXISTS" : "MISSING",
     },
     tests: [],
   }

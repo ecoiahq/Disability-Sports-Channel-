@@ -111,7 +111,8 @@ function getSanityImageUrl(imageField: any, width = 800, height = 450): string {
 
   console.log("❌ ALL METHODS FAILED - Using placeholder")
   console.log("Final imageField structure:", JSON.stringify(imageField, null, 2))
-  return "/placeholder.svg"
+  console.log("🔧 SOLUTION: Add images to your posts in Sanity Studio")
+  return "/para-swimming-competition.png" // Use a real image instead of placeholder.svg
 }
 
 // Transform Sanity post data to our Article type

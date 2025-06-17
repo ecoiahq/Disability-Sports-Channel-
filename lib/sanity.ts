@@ -61,21 +61,6 @@ console.log("  Project ID:", projectId ? `✓ ${projectId}` : "✗ Missing")
 console.log("  Dataset:", dataset)
 console.log("  API Version:", apiVersion)
 console.log("  Configured:", sanityConfigured ? "✅ Yes" : "❌ No")
-console.log("\n📋 Environment Variables:")
-console.log("  NEXT_PUBLIC_SANITY_PROJECT_ID:", process.env.NEXT_PUBLIC_SANITY_PROJECT_ID ? "✓ Set" : "✗ Missing")
-console.log("  NEXT_PUBLIC_SANITY_DATASET:", process.env.NEXT_PUBLIC_SANITY_DATASET ? "✓ Set" : "✗ Missing")
-console.log(
-  "  NEXT_PUBLIC_SANITY_API_VERSION:",
-  process.env.NEXT_PUBLIC_SANITY_API_VERSION
-    ? `✓ Set (${process.env.NEXT_PUBLIC_SANITY_API_VERSION?.substring(0, 10)}...)`
-    : "✗ Missing",
-)
-console.log("  SANITY_API_TOKEN:", process.env.SANITY_API_TOKEN ? "✓ Set" : "✗ Missing")
-
-if (!sanityConfigured) {
-  console.warn("\n⚠️ SANITY NOT PROPERLY CONFIGURED!")
-  console.warn("Please check your environment variables.")
-}
 
 // Create client configuration
 const config = {
@@ -98,26 +83,47 @@ export const serverClient = sanityConfigured
     })
   : null
 
-// Image URL builder - fix the image URL generation
+// Image URL builder
 const builder = sanityConfigured && client ? imageUrlBuilder(client) : null
 
 export function urlFor(source: any) {
   if (!builder || !source) {
-    console.log("urlFor: No builder or source", { builder: !!builder, source })
     return null
   }
 
   try {
-    const result = builder.image(source)
-    console.log("urlFor success:", { source, result })
-    return result
+    return builder.image(source)
   } catch (error) {
-    console.error("urlFor error:", error, { source })
+    console.error("urlFor error:", error)
     return null
   }
 }
 
-// Enhanced GROQ queries with better image handling
+// GROQ Queries
+export const ALL_POSTS_QUERY = `*[_type == "post"] | order(publishedAt desc) {
+  _id,
+  title,
+  slug,
+  publishedAt,
+  image {
+    asset->{
+      _id,
+      url,
+      metadata {
+        dimensions {
+          width,
+          height
+        }
+      }
+    },
+    alt,
+    hotspot,
+    crop
+  },
+  body,
+  featured
+}`
+
 export const FEATURED_POSTS_QUERY = `*[_type == "post" && featured == true] | order(publishedAt desc) [0...2] {
   _id,
   title,
@@ -143,30 +149,6 @@ export const FEATURED_POSTS_QUERY = `*[_type == "post" && featured == true] | or
 }`
 
 export const LATEST_POSTS_QUERY = `*[_type == "post"] | order(publishedAt desc) [0...6] {
-  _id,
-  title,
-  slug,
-  publishedAt,
-  image {
-    asset->{
-      _id,
-      url,
-      metadata {
-        dimensions {
-          width,
-          height
-        }
-      }
-    },
-    alt,
-    hotspot,
-    crop
-  },
-  body,
-  featured
-}`
-
-export const ALL_POSTS_QUERY = `*[_type == "post"] | order(publishedAt desc) {
   _id,
   title,
   slug,
@@ -410,35 +392,6 @@ export const ALL_SLUGS_QUERY = `*[_type == "post" || _type == "article"] {
   _type
 }`
 
-// Debug function to test Sanity connection
-export async function testSanityConnection() {
-  if (!sanityConfigured || !client) {
-    console.log("❌ Sanity not configured")
-    return { success: false, error: "Sanity not configured" }
-  }
-
-  try {
-    // Test basic query
-    const result = await client.fetch(`*[_type == "post"][0...1] {
-      _id,
-      title,
-      slug,
-      image {
-        asset->{
-          _id,
-          url
-        }
-      }
-    }`)
-
-    console.log("✅ Sanity connection test successful:", result)
-    return { success: true, data: result }
-  } catch (error) {
-    console.error("❌ Sanity connection test failed:", error)
-    return { success: false, error }
-  }
-}
-
 // Cached fetch functions
 export async function fetchArticles() {
   if (!sanityConfigured || !client) return []
@@ -452,7 +405,6 @@ export async function fetchArticles() {
         next: { tags: ["articles"], revalidate: 60 },
       },
     )
-    console.log("fetchArticles result:", result)
     return result
   } catch (error) {
     console.error("Error fetching articles:", error)
@@ -472,7 +424,6 @@ export async function fetchFeaturedArticles() {
         next: { tags: ["featured-articles"], revalidate: 60 },
       },
     )
-    console.log("fetchFeaturedArticles result:", result)
     return result
   } catch (error) {
     console.error("Error fetching featured articles:", error)
@@ -492,7 +443,6 @@ export async function fetchLatestArticles() {
         next: { tags: ["latest-articles"], revalidate: 60 },
       },
     )
-    console.log("fetchLatestArticles result:", result)
     return result
   } catch (error) {
     console.error("Error fetching latest articles:", error)
@@ -506,15 +456,40 @@ export async function fetchAllSlugs() {
 
   try {
     const slugs = await client.fetch(ALL_SLUGS_QUERY)
-    // Clean up slugs by trimming whitespace
     return slugs
       .map((item: any) => ({
         ...item,
         slug: item.slug?.trim() || "",
       }))
-      .filter((item: any) => item.slug) // Remove empty slugs
+      .filter((item: any) => item.slug)
   } catch (error) {
     console.error("Error fetching slugs:", error)
     return []
+  }
+}
+
+// Debug function to test Sanity connection
+export async function testSanityConnection() {
+  if (!sanityConfigured || !client) {
+    return { success: false, error: "Sanity not configured" }
+  }
+
+  try {
+    const result = await client.fetch(`*[_type == "post"][0...1] {
+      _id,
+      title,
+      slug,
+      image {
+        asset->{
+          _id,
+          url
+        }
+      }
+    }`)
+
+    return { success: true, data: result }
+  } catch (error) {
+    console.error("Sanity connection test failed:", error)
+    return { success: false, error }
   }
 }

@@ -10,10 +10,14 @@ interface SportTimelineProps {
 }
 
 export default function SportTimelineComponent({ timeline }: SportTimelineProps) {
+  if (!timeline || timeline.length === 0) {
+    return <div className="text-center text-gray-400 py-8">No timeline data available</div>
+  }
+
   return (
     <div className="relative space-y-8 py-6 before:absolute before:inset-0 before:ml-5 before:h-full before:border-l-2 before:border-gray-700 before:content-[''] md:before:mx-auto md:before:right-0 md:before:border-l-0 md:before:border-r-0">
       {timeline.map((item, index) => (
-        <TimelineItem key={index} item={item} index={index} />
+        <TimelineItem key={`${item.year}-${index}`} item={item} index={index} />
       ))}
     </div>
   )
@@ -87,22 +91,6 @@ function TimelineItem({ item, index }: TimelineItemProps) {
       transition: {
         duration: 0.5,
         delay: index * 0.2 + 0.3,
-      },
-    },
-  }
-
-  const expandVariants = {
-    collapsed: { height: 0, opacity: 0 },
-    expanded: {
-      height: "auto",
-      opacity: 1,
-      transition: {
-        height: {
-          duration: 0.3,
-        },
-        opacity: {
-          duration: 0.3,
-        },
       },
     },
   }
