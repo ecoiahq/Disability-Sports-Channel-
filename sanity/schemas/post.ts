@@ -31,5 +31,13 @@ export const postType = defineType({
       type: "array",
       of: [{ type: "block" }],
     }),
+    // Add this field for featured articles
+    defineField({
+      name: "featured",
+      type: "boolean",
+      title: "Featured Article",
+      description: "Mark this post as featured",
+      initialValue: false,
+    }),
   ],
 })
