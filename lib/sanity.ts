@@ -11,7 +11,7 @@ function getValidApiVersion(): string {
 
   // If no environment variable, use default
   if (!envApiVersion) {
-    console.log("No SANITY_API_VERSION found, using default")
+    console.log("No SANITY_API_VERSION found, using default: 2023-05-03")
     return "2023-05-03"
   }
 
@@ -19,24 +19,36 @@ function getValidApiVersion(): string {
   const cleanVersion = envApiVersion.trim()
 
   // If it looks like a token (long string with mixed characters), use default
-  if (cleanVersion.length > 20 || cleanVersion.includes("_") || /[A-Z]/.test(cleanVersion)) {
-    console.warn(`API version looks like a token, using default. Check your environment variables.`)
+  if (
+    cleanVersion.length > 20 ||
+    cleanVersion.includes("_") ||
+    cleanVersion.includes("sk") ||
+    cleanVersion.includes("Bearer")
+  ) {
+    console.warn(`⚠️ SANITY_API_VERSION appears to be a token instead of an API version!`)
+    console.warn(`Found: "${cleanVersion.substring(0, 20)}..."`)
+    console.warn(`Expected format: "2023-05-03" or "1"`)
+    console.warn(`Using default: 2023-05-03`)
     return "2023-05-03"
   }
 
   // Check if it's the legacy version "1"
   if (cleanVersion === "1") {
+    console.log("Using legacy API version: 1")
     return "1"
   }
 
   // Check if it matches YYYY-MM-DD format
   const dateRegex = /^\d{4}-\d{2}-\d{2}$/
   if (dateRegex.test(cleanVersion)) {
+    console.log(`Using API version: ${cleanVersion}`)
     return cleanVersion
   }
 
   // If invalid format, use default
-  console.warn(`Invalid Sanity API version: ${cleanVersion}, using default`)
+  console.warn(`⚠️ Invalid Sanity API version format: "${cleanVersion}"`)
+  console.warn(`Expected format: "2023-05-03" or "1"`)
+  console.warn(`Using default: 2023-05-03`)
   return "2023-05-03"
 }
 
@@ -44,18 +56,26 @@ const apiVersion = getValidApiVersion()
 
 export const sanityConfigured = !!(projectId && dataset)
 
-console.log("Sanity configuration:", {
-  projectId: projectId ? "✓ Set" : "✗ Missing",
-  dataset,
-  apiVersion,
-  sanityConfigured,
-  envVars: {
-    NEXT_PUBLIC_SANITY_PROJECT_ID: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID ? "✓ Set" : "✗ Missing",
-    NEXT_PUBLIC_SANITY_DATASET: process.env.NEXT_PUBLIC_SANITY_DATASET ? "✓ Set" : "✗ Missing",
-    NEXT_PUBLIC_SANITY_API_VERSION: process.env.NEXT_PUBLIC_SANITY_API_VERSION ? "✓ Set" : "✗ Missing",
-    SANITY_API_TOKEN: process.env.SANITY_API_TOKEN ? "✓ Set" : "✗ Missing",
-  },
-})
+console.log("🔧 Sanity Configuration Status:")
+console.log("  Project ID:", projectId ? `✓ ${projectId}` : "✗ Missing")
+console.log("  Dataset:", dataset)
+console.log("  API Version:", apiVersion)
+console.log("  Configured:", sanityConfigured ? "✅ Yes" : "❌ No")
+console.log("\n📋 Environment Variables:")
+console.log("  NEXT_PUBLIC_SANITY_PROJECT_ID:", process.env.NEXT_PUBLIC_SANITY_PROJECT_ID ? "✓ Set" : "✗ Missing")
+console.log("  NEXT_PUBLIC_SANITY_DATASET:", process.env.NEXT_PUBLIC_SANITY_DATASET ? "✓ Set" : "✗ Missing")
+console.log(
+  "  NEXT_PUBLIC_SANITY_API_VERSION:",
+  process.env.NEXT_PUBLIC_SANITY_API_VERSION
+    ? `✓ Set (${process.env.NEXT_PUBLIC_SANITY_API_VERSION?.substring(0, 10)}...)`
+    : "✗ Missing",
+)
+console.log("  SANITY_API_TOKEN:", process.env.SANITY_API_TOKEN ? "✓ Set" : "✗ Missing")
+
+if (!sanityConfigured) {
+  console.warn("\n⚠️ SANITY NOT PROPERLY CONFIGURED!")
+  console.warn("Please check your environment variables.")
+}
 
 // Create client configuration
 const config = {
