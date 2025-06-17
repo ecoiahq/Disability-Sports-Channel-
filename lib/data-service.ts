@@ -7,76 +7,54 @@ import type { Article, PodcastEpisode, VideoContent } from "@/lib/types"
 
 // Enhanced image URL generation to handle media library URLs
 function getSanityImageUrl(imageField: any, width = 800, height = 450): string {
-  console.log("🖼️ PROCESSING IMAGE FIELD:")
-  console.log("Input:", JSON.stringify(imageField, null, 2))
+  console.log("🖼️ Processing image field:", JSON.stringify(imageField, null, 2))
 
   if (!imageField) {
-    console.log("❌ No image field")
+    console.log("❌ No image field provided")
     return "/placeholder.svg"
   }
 
-  // Method 1: Direct asset URL (most common) - handles media library URLs
+  // Method 1: Direct asset URL (handles media library URLs)
   if (imageField.asset?.url) {
-    const url = imageField.asset.url
-    console.log("✅ FOUND DIRECT URL:", url)
-
-    // Check if it's a media library URL (your case!)
-    if (url.includes("cdn.sanity.io/media-libraries/")) {
-      console.log("🎯 MEDIA LIBRARY URL DETECTED")
-      return url
-    }
-
-    // Regular Sanity CDN URL
-    if (url.includes("cdn.sanity.io/images/")) {
-      console.log("🎯 REGULAR SANITY CDN URL")
-      return url
-    }
-
-    return url
+    console.log("✅ Found asset URL:", imageField.asset.url)
+    return imageField.asset.url
   }
 
-  // Method 2: Check if the entire field is a URL string (sometimes happens)
-  if (typeof imageField === "string") {
-    if (imageField.includes("cdn.sanity.io")) {
-      console.log("✅ STRING CDN URL:", imageField)
-      return imageField
-    }
-    if (imageField.startsWith("/")) {
-      console.log("✅ LOCAL FILE:", imageField)
-      return imageField
-    }
+  // Method 2: Check if image field itself has URL
+  if (imageField.url) {
+    console.log("✅ Found direct URL:", imageField.url)
+    return imageField.url
   }
 
-  // Method 3: Manual URL construction from asset reference
+  // Method 3: String URL (for media library URLs passed as strings)
+  if (typeof imageField === "string" && imageField.includes("cdn.sanity.io")) {
+    console.log("✅ String CDN URL:", imageField)
+    return imageField
+  }
+
+  // Method 4: Check for asset reference and build URL manually
   if (imageField.asset?._ref) {
     const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID
     const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET || "production"
 
-    console.log("🔧 Building URL manually:")
-    console.log("  - Project ID:", projectId)
-    console.log("  - Dataset:", dataset)
-    console.log("  - Asset Ref:", imageField.asset._ref)
+    if (projectId && dataset) {
+      const assetRef = imageField.asset._ref
+      console.log("🔧 Building URL from ref:", assetRef)
 
-    if (projectId && dataset && imageField.asset._ref.startsWith("image-")) {
-      const assetId = imageField.asset._ref
-      const match = assetId.match(/image-([a-f\d]+)-(\d+x\d+)-(\w+)/)
-
-      if (match) {
-        const [, id, dimensions, format] = match
-        const url = `https://cdn.sanity.io/images/${projectId}/${dataset}/${id}-${dimensions}.${format}`
-        console.log("✅ GENERATED URL:", url)
-        return url
+      // Handle image asset references
+      if (assetRef.startsWith("image-")) {
+        const match = assetRef.match(/image-([a-f\d]+)-(\d+x\d+)-(\w+)/)
+        if (match) {
+          const [, id, dimensions, format] = match
+          const url = `https://cdn.sanity.io/images/${projectId}/${dataset}/${id}-${dimensions}.${format}`
+          console.log("✅ Built URL:", url)
+          return url
+        }
       }
     }
   }
 
-  // Method 4: Check for nested URL in different structures
-  if (imageField.url) {
-    console.log("✅ NESTED URL FOUND:", imageField.url)
-    return imageField.url
-  }
-
-  console.log("❌ NO VALID IMAGE FOUND - USING PLACEHOLDER")
+  console.log("❌ Could not extract image URL, using placeholder")
   return "/placeholder.svg"
 }
 
@@ -300,32 +278,33 @@ export const getFeaturedArticlesAsync = async (): Promise<Article[]> => {
     if (sanityConfigured && client) {
       console.log("✅ Sanity configured - fetching posts...")
 
-      // Enhanced query to get more image data
+      // Enhanced query to get complete image data including media library URLs
       const sanityPosts = await client.fetch(`*[_type == "post"] | order(publishedAt desc) [0...5] {
-        _id,
-        title,
-        slug,
-        publishedAt,
-        image {
-          asset->{
-            _id,
-            url,
-            _ref,
-            metadata {
-              dimensions {
-                width,
-                height
-              }
-            }
-          },
-          alt,
-          hotspot,
-          crop,
-          url
-        },
-        body,
-        featured
-      }`)
+  _id,
+  title,
+  slug,
+  publishedAt,
+  image {
+    asset->{
+      _id,
+      url,
+      _ref,
+      originalFilename,
+      metadata {
+        dimensions {
+          width,
+          height
+        }
+      }
+    },
+    alt,
+    hotspot,
+    crop,
+    url
+  },
+  body,
+  featured
+}`)
 
       console.log("📊 SANITY QUERY RESULT:")
       console.log("  - Total posts found:", sanityPosts?.length || 0)
