@@ -1325,8 +1325,8 @@ packages:
     resolution: {integrity: sha512-nn5ozdjYQpUCZlWGuxcJY/KpxkWQs4DcbMCmKojjyrYDEAGy4Ce19NN4v5MduafTwJlbKc99UA8YhSVqq9yPZA==}
     engines: {node: '>=12.4.0'}
 
-  '@oclif/core@4.3.3':
-    resolution: {integrity: sha512-A0mk4nlVE+r34fl91OdglXVPwhhfzM59IhSxnOigqMkwxFgT8z3i2WlUgzmazzvzSccs2KM4N2HkTS3NEvW96g==}
+  '@oclif/core@4.4.0':
+    resolution: {integrity: sha512-wH5g3SLmbRutnr7UzQBSozRFEAZ7U9YGB/wFuBRr0ZghTgv5DE+KQaf6ZtU7iFb9pvkvoVRnT5XheNAtbjRDaQ==}
     engines: {node: '>=18.0.0'}
 
   '@oclif/plugin-help@6.2.29':
@@ -7963,7 +7963,7 @@ snapshots:
 
   '@nolyfill/is-core-module@1.0.39': {}
 
-  '@oclif/core@4.3.3':
+  '@oclif/core@4.4.0':
     dependencies:
       ansi-escapes: 4.3.2
       ansis: 3.17.0
@@ -7986,7 +7986,7 @@ snapshots:
 
   '@oclif/plugin-help@6.2.29':
     dependencies:
-      '@oclif/core': 4.3.3
+      '@oclif/core': 4.4.0
 
   '@octokit/auth-token@4.0.0': {}
 
@@ -9400,7 +9400,7 @@ snapshots:
 
   '@sanity/runtime-cli@8.1.2(@types/node@22.0.0)(typescript@5.0.2)(yaml@2.8.0)':
     dependencies:
-      '@oclif/core': 4.3.3
+      '@oclif/core': 4.4.0
       '@oclif/plugin-help': 6.2.29
       adm-zip: 0.5.16
       array-treeify: 0.1.5
