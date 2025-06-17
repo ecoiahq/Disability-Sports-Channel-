@@ -4,7 +4,6 @@ import {
   FEATURED_ARTICLES_QUERY,
   LATEST_ARTICLES_QUERY,
   ARTICLES_QUERY,
-  LATEST_POSTS_QUERY,
   ALL_POSTS_QUERY,
   urlFor,
   testSanityConnection,
@@ -18,48 +17,67 @@ import type { Article, PodcastEpisode, VideoContent } from "@/lib/types"
  * It tries to fetch from Sanity first, then falls back to static data.
  */
 
-// Helper function to get image URL from Sanity with comprehensive debugging
+// Enhanced image URL generation with multiple fallback methods
 function getSanityImageUrl(imageField: any, width = 800, height = 450): string {
-  console.log("getSanityImageUrl called with:", { imageField, width, height })
+  console.log("🖼️ getSanityImageUrl called with:", { imageField, width, height })
 
   if (!imageField) {
-    console.log("No image field provided")
+    console.log("❌ No image field provided")
     return "/placeholder.svg"
   }
 
-  // If it's a direct asset URL
+  // Method 1: Direct asset URL (most reliable)
   if (imageField.asset?.url) {
-    console.log("Using direct asset URL:", imageField.asset.url)
+    console.log("✅ Using direct asset URL:", imageField.asset.url)
     return imageField.asset.url
   }
 
-  // If we can use urlFor to build the URL
+  // Method 2: Build URL manually from asset reference
+  if (imageField.asset?._ref) {
+    const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID
+    const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET || "production"
+
+    if (projectId && dataset) {
+      const assetId = imageField.asset._ref
+      // Parse asset reference: image-{id}-{dimensions}-{format}
+      const match = assetId.match(/image-([a-f\d]+)-(\d+x\d+)-(\w+)/)
+
+      if (match) {
+        const [, id, dimensions, format] = match
+        const manualUrl = `https://cdn.sanity.io/images/${projectId}/${dataset}/${id}-${dimensions}.${format}?w=${width}&h=${height}&fit=crop&auto=format`
+        console.log("✅ Generated manual URL:", manualUrl)
+        return manualUrl
+      }
+    }
+  }
+
+  // Method 3: Use urlFor builder
   if (urlFor && imageField) {
     try {
       const urlBuilder = urlFor(imageField)
       if (urlBuilder) {
-        const url = urlBuilder.width(width).height(height).url()
-        console.log("Generated URL with urlFor:", url)
+        const url = urlBuilder.width(width).height(height).fit("crop").auto("format").url()
+        console.log("✅ Generated URL with urlFor:", url)
         return url || "/placeholder.svg"
       }
     } catch (error) {
-      console.error("Error generating image URL with urlFor:", error)
+      console.error("❌ Error with urlFor:", error)
     }
   }
 
-  // If it's already a string URL
+  // Method 4: String URL fallback
   if (typeof imageField === "string") {
-    console.log("Using string URL:", imageField)
+    console.log("✅ Using string URL:", imageField)
     return imageField
   }
 
-  console.log("Falling back to placeholder")
+  console.log("❌ All methods failed, using placeholder")
   return "/placeholder.svg"
 }
 
 // Transform Sanity post data to our Article type
 function transformSanityPost(sanityPost: any): Article {
-  console.log("Transforming Sanity post:", sanityPost)
+  console.log("🔄 Transforming Sanity post:", sanityPost)
 
   // Extract first paragraph from body as excerpt
   const excerpt =
@@ -71,8 +89,8 @@ function transformSanityPost(sanityPost: any): Article {
   // Sanitize slug by trimming spaces and ensuring it's clean
   const cleanSlug = sanityPost.slug?.current?.trim() || ""
 
-  // Get proper image URL
-  const imageUrl = getSanityImageUrl(sanityPost.image)
+  // Get proper image URL with enhanced handling
+  const imageUrl = getSanityImageUrl(sanityPost.image, 800, 450)
 
   const transformed = {
     id: sanityPost._id,
@@ -90,19 +108,19 @@ function transformSanityPost(sanityPost: any): Article {
     sportTags: [],
   }
 
-  console.log("Transformed post:", transformed)
+  console.log("✨ Transformed post with image:", { title: transformed.title, image: transformed.image })
   return transformed
 }
 
 // Transform Sanity article data to our Article type
 function transformSanityArticle(sanityArticle: any): Article {
-  console.log("Transforming Sanity article:", sanityArticle)
+  console.log("🔄 Transforming Sanity article:", sanityArticle)
 
   // Sanitize slug by trimming spaces and ensuring it's clean
   const cleanSlug = sanityArticle.slug?.current?.trim() || ""
 
-  // Get proper image URL
-  const imageUrl = getSanityImageUrl(sanityArticle.featuredImage)
+  // Get proper image URL with enhanced handling
+  const imageUrl = getSanityImageUrl(sanityArticle.featuredImage, 800, 450)
 
   const transformed = {
     id: sanityArticle._id,
@@ -120,13 +138,12 @@ function transformSanityArticle(sanityArticle: any): Article {
     sportTags: sanityArticle.sportTags || [],
   }
 
-  console.log("Transformed article:", transformed)
+  console.log("✨ Transformed article with image:", { title: transformed.title, image: transformed.image })
   return transformed
 }
 
 export const getFeaturedArticles = (): Article[] => {
-  // For now, return static data to preserve layout
-  // Will be updated to async when Sanity is configured
+  // Static fallback data - these will be replaced by Sanity content when available
   return [
     {
       id: 1,
@@ -152,12 +169,47 @@ export const getFeaturedArticles = (): Article[] => {
       url: "/news/alcott-schroder-wheelchair-tennis-final",
       sportTags: ["wheelchair-tennis"],
     },
+    {
+      id: 3,
+      title: "Stubbs secures gold in dramatic para archery final",
+      excerpt:
+        "Great Britain's John Stubbs claimed gold in the para archery final with a perfect 10 on his final arrow to edge out China's Zhao Lixue by a single point.",
+      image: "/para-archery-competition.png",
+      date: "May 2, 2025",
+      author: "Michael Chen",
+      category: "Para Archery",
+      url: "/news/stubbs-gold-para-archery-final",
+      sportTags: ["para-archery"],
+    },
+    {
+      id: 4,
+      title: "Paralympic Committee announces new classification guidelines for Paris 2024",
+      excerpt:
+        "The International Paralympic Committee has released updated classification guidelines for the Paris 2024 Paralympic Games, with several key changes to existing categories.",
+      image: "/placeholder.svg?key=o63e0",
+      date: "May 2, 2025",
+      author: "Emma Parker",
+      category: "Paralympic News",
+      url: "/news/paralympic-committee-new-classification-guidelines",
+      sportTags: [],
+    },
+    {
+      id: 5,
+      title: "Boccia world rankings updated ahead of World Championships",
+      excerpt:
+        "The World Boccia Federation has released updated world rankings ahead of next month's World Championships in São Paulo, Brazil.",
+      image: "/placeholder.svg?key=j85s8",
+      date: "May 2, 2025",
+      author: "David Thompson",
+      category: "Boccia",
+      url: "/news/boccia-world-rankings-update",
+      sportTags: ["boccia"],
+    },
   ]
 }
 
 export const getLatestArticles = (): Article[] => {
-  // For now, return static data to preserve layout
-  // Will be updated to async when Sanity is configured
+  // Static fallback data - these will be replaced by Sanity content when available
   return [
     {
       id: 1,
@@ -234,20 +286,20 @@ export const getLatestArticles = (): Article[] => {
   ]
 }
 
-// Async versions that check both Posts and Articles
+// Async versions that check both Posts and Articles - these will be used by the home page
 export const getFeaturedArticlesAsync = async (): Promise<Article[]> => {
-  console.log("🔍 getFeaturedArticlesAsync called")
+  console.log("🚀 getFeaturedArticlesAsync called")
 
   // Test Sanity connection first
   const connectionTest = await testSanityConnection()
-  console.log("Sanity connection test:", connectionTest)
+  console.log("🔗 Sanity connection test:", connectionTest)
 
   try {
     if (sanityConfigured && client) {
       console.log("✅ Sanity is configured, fetching posts...")
 
-      // Get the latest 2 posts automatically as featured (no need for featured checkbox)
-      const sanityPosts = await client.fetch(`*[_type == "post"] | order(publishedAt desc) [0...2] {
+      // Enhanced query with better image data
+      const sanityPosts = await client.fetch(`*[_type == "post"] | order(publishedAt desc) [0...5] {
         _id,
         title,
         slug,
@@ -256,6 +308,7 @@ export const getFeaturedArticlesAsync = async (): Promise<Article[]> => {
           asset->{
             _id,
             url,
+            _ref,
             metadata {
               dimensions {
                 width,
@@ -271,11 +324,14 @@ export const getFeaturedArticlesAsync = async (): Promise<Article[]> => {
         featured
       }`)
 
-      console.log("📄 Raw posts from Sanity:", JSON.stringify(sanityPosts, null, 2))
+      console.log("📄 Raw posts from Sanity with images:", JSON.stringify(sanityPosts, null, 2))
 
       if (sanityPosts && sanityPosts.length > 0) {
         const transformedPosts = sanityPosts.map(transformSanityPost)
-        console.log("✨ Transformed featured posts:", transformedPosts)
+        console.log(
+          "✨ Final transformed posts:",
+          transformedPosts.map((p) => ({ title: p.title, image: p.image })),
+        )
         return transformedPosts
       }
 
@@ -300,14 +356,38 @@ export const getFeaturedArticlesAsync = async (): Promise<Article[]> => {
 }
 
 export const getLatestArticlesAsync = async (): Promise<Article[]> => {
-  console.log("🔍 getLatestArticlesAsync called")
+  console.log("🚀 getLatestArticlesAsync called")
 
   try {
     if (sanityConfigured && client) {
       console.log("✅ Sanity is configured, fetching latest posts...")
 
-      // Try to fetch latest posts first
-      const sanityPosts = await client.fetch(LATEST_POSTS_QUERY)
+      // Enhanced query with better image data
+      const sanityPosts = await client.fetch(`*[_type == "post"] | order(publishedAt desc) [0...6] {
+        _id,
+        title,
+        slug,
+        publishedAt,
+        image {
+          asset->{
+            _id,
+            url,
+            _ref,
+            metadata {
+              dimensions {
+                width,
+                height
+              }
+            }
+          },
+          alt,
+          hotspot,
+          crop
+        },
+        body,
+        featured
+      }`)
+
       console.log("📄 Raw latest posts from Sanity:", JSON.stringify(sanityPosts, null, 2))
 
       if (sanityPosts && sanityPosts.length > 0) {
