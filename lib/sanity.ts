@@ -37,6 +37,13 @@ const apiVersion = getValidApiVersion()
 
 export const sanityConfigured = !!(projectId && dataset)
 
+console.log("Sanity configuration:", {
+  projectId: projectId ? "✓ Set" : "✗ Missing",
+  dataset,
+  apiVersion,
+  sanityConfigured,
+})
+
 // Create client configuration
 const config = {
   projectId: projectId || "",
@@ -62,11 +69,22 @@ export const serverClient = sanityConfigured
 const builder = sanityConfigured && client ? imageUrlBuilder(client) : null
 
 export function urlFor(source: any) {
-  if (!builder || !source) return null
-  return builder.image(source)
+  if (!builder || !source) {
+    console.log("urlFor: No builder or source", { builder: !!builder, source })
+    return null
+  }
+
+  try {
+    const result = builder.image(source)
+    console.log("urlFor success:", { source, result })
+    return result
+  } catch (error) {
+    console.error("urlFor error:", error, { source })
+    return null
+  }
 }
 
-// GROQ queries for Posts (your current content) - Updated to include image asset reference
+// Enhanced GROQ queries with better image handling
 export const FEATURED_POSTS_QUERY = `*[_type == "post" && featured == true] | order(publishedAt desc) [0...2] {
   _id,
   title,
@@ -75,9 +93,17 @@ export const FEATURED_POSTS_QUERY = `*[_type == "post" && featured == true] | or
   image {
     asset->{
       _id,
-      url
+      url,
+      metadata {
+        dimensions {
+          width,
+          height
+        }
+      }
     },
-    alt
+    alt,
+    hotspot,
+    crop
   },
   body,
   featured
@@ -91,9 +117,17 @@ export const LATEST_POSTS_QUERY = `*[_type == "post"] | order(publishedAt desc) 
   image {
     asset->{
       _id,
-      url
+      url,
+      metadata {
+        dimensions {
+          width,
+          height
+        }
+      }
     },
-    alt
+    alt,
+    hotspot,
+    crop
   },
   body,
   featured
@@ -107,9 +141,17 @@ export const ALL_POSTS_QUERY = `*[_type == "post"] | order(publishedAt desc) {
   image {
     asset->{
       _id,
-      url
+      url,
+      metadata {
+        dimensions {
+          width,
+          height
+        }
+      }
     },
-    alt
+    alt,
+    hotspot,
+    crop
   },
   body,
   featured
@@ -123,9 +165,17 @@ export const POST_BY_SLUG_QUERY = `*[_type == "post" && slug.current == $slug][0
   image {
     asset->{
       _id,
-      url
+      url,
+      metadata {
+        dimensions {
+          width,
+          height
+        }
+      }
     },
-    alt
+    alt,
+    hotspot,
+    crop
   },
   body,
   featured
@@ -140,9 +190,17 @@ export const ARTICLES_QUERY = `*[_type == "article"] | order(publishedAt desc) {
   featuredImage {
     asset->{
       _id,
-      url
+      url,
+      metadata {
+        dimensions {
+          width,
+          height
+        }
+      }
     },
-    alt
+    alt,
+    hotspot,
+    crop
   },
   publishedAt,
   featured,
@@ -165,9 +223,17 @@ export const FEATURED_ARTICLES_QUERY = `*[_type == "article" && featured == true
   featuredImage {
     asset->{
       _id,
-      url
+      url,
+      metadata {
+        dimensions {
+          width,
+          height
+        }
+      }
     },
-    alt
+    alt,
+    hotspot,
+    crop
   },
   publishedAt,
   sportTags,
@@ -189,9 +255,17 @@ export const LATEST_ARTICLES_QUERY = `*[_type == "article"] | order(publishedAt 
   featuredImage {
     asset->{
       _id,
-      url
+      url,
+      metadata {
+        dimensions {
+          width,
+          height
+        }
+      }
     },
-    alt
+    alt,
+    hotspot,
+    crop
   },
   publishedAt,
   sportTags,
@@ -214,9 +288,17 @@ export const ARTICLE_BY_SLUG_QUERY = `*[_type == "article" && slug.current == $s
   featuredImage {
     asset->{
       _id,
-      url
+      url,
+      metadata {
+        dimensions {
+          width,
+          height
+        }
+      }
     },
-    alt
+    alt,
+    hotspot,
+    crop
   },
   publishedAt,
   sportTags,
@@ -244,9 +326,17 @@ export const COMBINED_FEATURED_QUERY = `*[(_type == "post" || _type == "article"
   "featuredImage": select(_type == "post" => image, featuredImage) {
     asset->{
       _id,
-      url
+      url,
+      metadata {
+        dimensions {
+          width,
+          height
+        }
+      }
     },
-    alt
+    alt,
+    hotspot,
+    crop
   },
   "author": select(_type == "article" => author->{name, slug}, null),
   "category": select(_type == "article" => category->{title, slug}, null),
@@ -264,9 +354,17 @@ export const COMBINED_LATEST_QUERY = `*[_type == "post" || _type == "article"] |
   "featuredImage": select(_type == "post" => image, featuredImage) {
     asset->{
       _id,
-      url
+      url,
+      metadata {
+        dimensions {
+          width,
+          height
+        }
+      }
     },
-    alt
+    alt,
+    hotspot,
+    crop
   },
   "author": select(_type == "article" => author->{name, slug}, null),
   "category": select(_type == "article" => category->{title, slug}, null),
@@ -279,12 +377,41 @@ export const ALL_SLUGS_QUERY = `*[_type == "post" || _type == "article"] {
   _type
 }`
 
+// Debug function to test Sanity connection
+export async function testSanityConnection() {
+  if (!sanityConfigured || !client) {
+    console.log("❌ Sanity not configured")
+    return { success: false, error: "Sanity not configured" }
+  }
+
+  try {
+    // Test basic query
+    const result = await client.fetch(`*[_type == "post"][0...1] {
+      _id,
+      title,
+      slug,
+      image {
+        asset->{
+          _id,
+          url
+        }
+      }
+    }`)
+
+    console.log("✅ Sanity connection test successful:", result)
+    return { success: true, data: result }
+  } catch (error) {
+    console.error("❌ Sanity connection test failed:", error)
+    return { success: false, error }
+  }
+}
+
 // Cached fetch functions
 export async function fetchArticles() {
   if (!sanityConfigured || !client) return []
 
   try {
-    return await client.fetch(
+    const result = await client.fetch(
       COMBINED_LATEST_QUERY,
       {},
       {
@@ -292,6 +419,8 @@ export async function fetchArticles() {
         next: { tags: ["articles"], revalidate: 60 },
       },
     )
+    console.log("fetchArticles result:", result)
+    return result
   } catch (error) {
     console.error("Error fetching articles:", error)
     return []
@@ -302,7 +431,7 @@ export async function fetchFeaturedArticles() {
   if (!sanityConfigured || !client) return []
 
   try {
-    return await client.fetch(
+    const result = await client.fetch(
       COMBINED_FEATURED_QUERY,
       {},
       {
@@ -310,6 +439,8 @@ export async function fetchFeaturedArticles() {
         next: { tags: ["featured-articles"], revalidate: 60 },
       },
     )
+    console.log("fetchFeaturedArticles result:", result)
+    return result
   } catch (error) {
     console.error("Error fetching featured articles:", error)
     return []
@@ -320,7 +451,7 @@ export async function fetchLatestArticles() {
   if (!sanityConfigured || !client) return []
 
   try {
-    return await client.fetch(
+    const result = await client.fetch(
       COMBINED_LATEST_QUERY,
       {},
       {
@@ -328,6 +459,8 @@ export async function fetchLatestArticles() {
         next: { tags: ["latest-articles"], revalidate: 60 },
       },
     )
+    console.log("fetchLatestArticles result:", result)
+    return result
   } catch (error) {
     console.error("Error fetching latest articles:", error)
     return []

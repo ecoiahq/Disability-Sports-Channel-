@@ -7,6 +7,7 @@ import {
   LATEST_POSTS_QUERY,
   ALL_POSTS_QUERY,
   urlFor,
+  testSanityConnection,
 } from "@/lib/sanity"
 import type { Article, PodcastEpisode, VideoContent } from "@/lib/types"
 
@@ -17,36 +18,49 @@ import type { Article, PodcastEpisode, VideoContent } from "@/lib/types"
  * It tries to fetch from Sanity first, then falls back to static data.
  */
 
-// Helper function to get image URL from Sanity
-function getSanityImageUrl(imageField: any): string {
-  if (!imageField) return "/placeholder.svg"
+// Helper function to get image URL from Sanity with comprehensive debugging
+function getSanityImageUrl(imageField: any, width = 800, height = 450): string {
+  console.log("getSanityImageUrl called with:", { imageField, width, height })
+
+  if (!imageField) {
+    console.log("No image field provided")
+    return "/placeholder.svg"
+  }
 
   // If it's a direct asset URL
   if (imageField.asset?.url) {
+    console.log("Using direct asset URL:", imageField.asset.url)
     return imageField.asset.url
   }
 
   // If we can use urlFor to build the URL
   if (urlFor && imageField) {
     try {
-      const url = urlFor(imageField).width(800).height(450).url()
-      return url || "/placeholder.svg"
+      const urlBuilder = urlFor(imageField)
+      if (urlBuilder) {
+        const url = urlBuilder.width(width).height(height).url()
+        console.log("Generated URL with urlFor:", url)
+        return url || "/placeholder.svg"
+      }
     } catch (error) {
-      console.error("Error generating image URL:", error)
-      return "/placeholder.svg"
+      console.error("Error generating image URL with urlFor:", error)
     }
   }
 
   // If it's already a string URL
   if (typeof imageField === "string") {
+    console.log("Using string URL:", imageField)
     return imageField
   }
 
+  console.log("Falling back to placeholder")
   return "/placeholder.svg"
 }
 
 // Transform Sanity post data to our Article type
 function transformSanityPost(sanityPost: any): Article {
+  console.log("Transforming Sanity post:", sanityPost)
+
   // Extract first paragraph from body as excerpt
   const excerpt =
     sanityPost.body
@@ -60,7 +74,7 @@ function transformSanityPost(sanityPost: any): Article {
   // Get proper image URL
   const imageUrl = getSanityImageUrl(sanityPost.image)
 
-  return {
+  const transformed = {
     id: sanityPost._id,
     title: sanityPost.title,
     excerpt: excerpt,
@@ -75,17 +89,22 @@ function transformSanityPost(sanityPost: any): Article {
     url: `/news/${cleanSlug}`,
     sportTags: [],
   }
+
+  console.log("Transformed post:", transformed)
+  return transformed
 }
 
 // Transform Sanity article data to our Article type
 function transformSanityArticle(sanityArticle: any): Article {
+  console.log("Transforming Sanity article:", sanityArticle)
+
   // Sanitize slug by trimming spaces and ensuring it's clean
   const cleanSlug = sanityArticle.slug?.current?.trim() || ""
 
   // Get proper image URL
   const imageUrl = getSanityImageUrl(sanityArticle.featuredImage)
 
-  return {
+  const transformed = {
     id: sanityArticle._id,
     title: sanityArticle.title,
     excerpt: sanityArticle.excerpt,
@@ -100,6 +119,9 @@ function transformSanityArticle(sanityArticle: any): Article {
     url: `/news/${cleanSlug}`,
     sportTags: sanityArticle.sportTags || [],
   }
+
+  console.log("Transformed article:", transformed)
+  return transformed
 }
 
 export const getFeaturedArticles = (): Article[] => {
@@ -214,8 +236,16 @@ export const getLatestArticles = (): Article[] => {
 
 // Async versions that check both Posts and Articles
 export const getFeaturedArticlesAsync = async (): Promise<Article[]> => {
+  console.log("🔍 getFeaturedArticlesAsync called")
+
+  // Test Sanity connection first
+  const connectionTest = await testSanityConnection()
+  console.log("Sanity connection test:", connectionTest)
+
   try {
     if (sanityConfigured && client) {
+      console.log("✅ Sanity is configured, fetching posts...")
+
       // Get the latest 2 posts automatically as featured (no need for featured checkbox)
       const sanityPosts = await client.fetch(`*[_type == "post"] | order(publishedAt desc) [0...2] {
         _id,
@@ -225,58 +255,83 @@ export const getFeaturedArticlesAsync = async (): Promise<Article[]> => {
         image {
           asset->{
             _id,
-            url
+            url,
+            metadata {
+              dimensions {
+                width,
+                height
+              }
+            }
           },
-          alt
+          alt,
+          hotspot,
+          crop
         },
         body,
         featured
       }`)
 
-      console.log("Featured posts from Sanity:", sanityPosts)
+      console.log("📄 Raw posts from Sanity:", JSON.stringify(sanityPosts, null, 2))
 
       if (sanityPosts && sanityPosts.length > 0) {
         const transformedPosts = sanityPosts.map(transformSanityPost)
-        console.log("Transformed featured posts:", transformedPosts)
+        console.log("✨ Transformed featured posts:", transformedPosts)
         return transformedPosts
       }
 
       // Fallback to articles
+      console.log("📰 No posts found, trying articles...")
       const sanityArticles = await client.fetch(FEATURED_ARTICLES_QUERY)
+      console.log("📰 Raw articles from Sanity:", JSON.stringify(sanityArticles, null, 2))
+
       if (sanityArticles && sanityArticles.length > 0) {
         return sanityArticles.map(transformSanityArticle)
       }
+    } else {
+      console.log("❌ Sanity not configured, using static data")
     }
+
+    console.log("🔄 Falling back to static featured articles")
     return getFeaturedArticles()
   } catch (error) {
-    console.error("Error fetching featured articles:", error)
+    console.error("❌ Error fetching featured articles:", error)
     return getFeaturedArticles()
   }
 }
 
 export const getLatestArticlesAsync = async (): Promise<Article[]> => {
+  console.log("🔍 getLatestArticlesAsync called")
+
   try {
     if (sanityConfigured && client) {
+      console.log("✅ Sanity is configured, fetching latest posts...")
+
       // Try to fetch latest posts first
       const sanityPosts = await client.fetch(LATEST_POSTS_QUERY)
-
-      console.log("Latest posts from Sanity:", sanityPosts)
+      console.log("📄 Raw latest posts from Sanity:", JSON.stringify(sanityPosts, null, 2))
 
       if (sanityPosts && sanityPosts.length > 0) {
         const transformedPosts = sanityPosts.map(transformSanityPost)
-        console.log("Transformed latest posts:", transformedPosts)
+        console.log("✨ Transformed latest posts:", transformedPosts)
         return transformedPosts
       }
 
       // Fallback to articles
+      console.log("📰 No posts found, trying articles...")
       const sanityArticles = await client.fetch(LATEST_ARTICLES_QUERY)
+      console.log("📰 Raw latest articles from Sanity:", JSON.stringify(sanityArticles, null, 2))
+
       if (sanityArticles && sanityArticles.length > 0) {
         return sanityArticles.map(transformSanityArticle)
       }
+    } else {
+      console.log("❌ Sanity not configured, using static data")
     }
+
+    console.log("🔄 Falling back to static latest articles")
     return getLatestArticles()
   } catch (error) {
-    console.error("Error fetching latest articles:", error)
+    console.error("❌ Error fetching latest articles:", error)
     return getLatestArticles()
   }
 }
