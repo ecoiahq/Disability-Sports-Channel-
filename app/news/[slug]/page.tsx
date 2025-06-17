@@ -14,6 +14,79 @@ interface ArticlePageProps {
   }
 }
 
+// Custom PortableText components for proper formatting
+const portableTextComponents = {
+  types: {
+    image: ({ value }: any) => (
+      <div className="my-8">
+        <Image
+          src={urlFor && urlFor(value) ? urlFor(value).width(800).height(450).url() : "/placeholder.svg"}
+          alt={value.alt || ""}
+          width={800}
+          height={450}
+          className="rounded-lg w-full"
+        />
+        {value.caption && <p className="text-sm text-gray-400 mt-2 text-center italic">{value.caption}</p>}
+      </div>
+    ),
+  },
+  block: {
+    // Headings
+    h1: ({ children }: any) => <h1 className="text-4xl font-bold mb-6 mt-8 text-white">{children}</h1>,
+    h2: ({ children }: any) => <h2 className="text-3xl font-bold mb-4 mt-6 text-white">{children}</h2>,
+    h3: ({ children }: any) => <h3 className="text-2xl font-bold mb-3 mt-5 text-white">{children}</h3>,
+    h4: ({ children }: any) => <h4 className="text-xl font-bold mb-2 mt-4 text-white">{children}</h4>,
+
+    // Paragraphs
+    normal: ({ children }: any) => <p className="mb-4 text-gray-300 leading-relaxed text-lg">{children}</p>,
+
+    // Block quotes
+    blockquote: ({ children }: any) => (
+      <blockquote className="border-l-4 border-teal-600 pl-6 my-6 italic text-gray-300 bg-gray-900 py-4 rounded-r-lg">
+        {children}
+      </blockquote>
+    ),
+  },
+  list: {
+    // Bullet lists
+    bullet: ({ children }: any) => <ul className="list-disc list-inside mb-4 text-gray-300 space-y-2">{children}</ul>,
+    // Numbered lists
+    number: ({ children }: any) => (
+      <ol className="list-decimal list-inside mb-4 text-gray-300 space-y-2">{children}</ol>
+    ),
+  },
+  listItem: {
+    // List items
+    bullet: ({ children }: any) => <li className="mb-1">{children}</li>,
+    number: ({ children }: any) => <li className="mb-1">{children}</li>,
+  },
+  marks: {
+    // Bold text
+    strong: ({ children }: any) => <strong className="font-bold text-white">{children}</strong>,
+    // Italic text
+    em: ({ children }: any) => <em className="italic">{children}</em>,
+    // Underline
+    underline: ({ children }: any) => <u className="underline">{children}</u>,
+    // Strike through
+    "strike-through": ({ children }: any) => <s className="line-through">{children}</s>,
+    // Code
+    code: ({ children }: any) => (
+      <code className="bg-gray-800 text-teal-400 px-2 py-1 rounded text-sm font-mono">{children}</code>
+    ),
+    // Links
+    link: ({ children, value }: any) => (
+      <a
+        href={value.href}
+        className="text-teal-400 hover:text-teal-300 underline transition-colors"
+        target={value.blank ? "_blank" : undefined}
+        rel={value.blank ? "noopener noreferrer" : undefined}
+      >
+        {children}
+      </a>
+    ),
+  },
+}
+
 async function getArticle(slug: string) {
   try {
     if (sanityConfigured && client) {
@@ -144,28 +217,11 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
               </div>
 
               {/* Article Content */}
-              <div className="prose prose-invert prose-lg max-w-none">
+              <div className="max-w-none">
                 {article.content ? (
-                  <PortableText
-                    value={article.content}
-                    components={{
-                      types: {
-                        image: ({ value }) => (
-                          <Image
-                            src={
-                              urlFor && urlFor(value) ? urlFor(value).width(800).height(450).url() : "/placeholder.svg"
-                            }
-                            alt={value.alt || ""}
-                            width={800}
-                            height={450}
-                            className="rounded-lg"
-                          />
-                        ),
-                      },
-                    }}
-                  />
+                  <PortableText value={article.content} components={portableTextComponents} />
                 ) : (
-                  <p>Article content will be displayed here when available.</p>
+                  <p className="text-gray-300">Article content will be displayed here when available.</p>
                 )}
               </div>
 
