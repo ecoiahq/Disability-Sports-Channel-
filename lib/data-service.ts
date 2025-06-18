@@ -5,9 +5,54 @@ import type { Article, PodcastEpisode, VideoContent } from "@/lib/types"
 function transformSanityPost(sanityPost: any): Article {
   const cleanSlug = sanityPost.slug?.current?.trim() || ""
 
+  // Debug logging for image processing
+  console.log("🖼️ Processing image for post:", sanityPost.title)
+  console.log("  - Raw image data:", {
+    thumbnail: sanityPost.thumbnail,
+    image: sanityPost.image,
+    mainImage: sanityPost.mainImage,
+  })
+
+  // Try multiple image field possibilities
+  let imageSource = null
+  let imageUrl = "/placeholder.svg"
+
+  // Check for thumbnail field first
+  if (sanityPost.thumbnail?.asset) {
+    imageSource = sanityPost.thumbnail
+    console.log("  - Found thumbnail asset")
+  }
+  // Check for image field
+  else if (sanityPost.image?.asset) {
+    imageSource = sanityPost.image
+    console.log("  - Found image asset")
+  }
+  // Check for mainImage field (common in Sanity)
+  else if (sanityPost.mainImage?.asset) {
+    imageSource = sanityPost.mainImage
+    console.log("  - Found mainImage asset")
+  }
+
+  // If we have an image source, process it
+  if (imageSource) {
+    // Try to get the URL directly from the asset if available
+    if (imageSource.asset?.url) {
+      imageUrl = imageSource.asset.url
+      console.log("  - Using direct asset URL:", imageUrl)
+    } else {
+      // Use getThumbnailUrl to build the URL
+      imageUrl = getThumbnailUrl(imageSource, 800, 450)
+      console.log("  - Using getThumbnailUrl:", imageUrl)
+    }
+  } else {
+    console.log("  - No image source found, using placeholder")
+  }
+
   // Extract excerpt from body
   let excerpt = "Read more about this story..."
-  if (sanityPost.body && Array.isArray(sanityPost.body)) {
+  if (sanityPost.excerpt) {
+    excerpt = sanityPost.excerpt
+  } else if (sanityPost.body && Array.isArray(sanityPost.body)) {
     const textBlock = sanityPost.body.find(
       (block: any) => block._type === "block" && block.children && Array.isArray(block.children),
     )
@@ -19,32 +64,41 @@ function transformSanityPost(sanityPost: any): Article {
     }
   }
 
+  console.log("  - Final image URL:", imageUrl)
+
   return {
     id: sanityPost._id,
     title: sanityPost.title,
     excerpt: excerpt,
-    // Use getThumbnailUrl for both 'thumbnail' and 'image' fields
-    image: getThumbnailUrl(sanityPost.thumbnail || sanityPost.image, 800, 450),
+    image: imageUrl,
     date: new Date(sanityPost.publishedAt).toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
       day: "numeric",
     }),
-    author: "Admin",
-    category: "News",
+    author: sanityPost.author?.name || "Admin",
+    category: sanityPost.category?.title || "News",
     url: `/news/${cleanSlug}`,
     sportTags: [],
   }
 }
 
-// Enhanced Sanity query to fetch thumbnail field
+// Enhanced Sanity query to fetch ALL possible image fields
 export const getFeaturedArticlesAsync = async (): Promise<Article[]> => {
   try {
+    console.log("🔍 Fetching articles from Sanity...")
     const posts = await client.fetch(`*[_type == "post"] | order(publishedAt desc) [0...5] {
       _id,
       title,
       slug,
       publishedAt,
+      excerpt,
+      author->{
+        name
+      },
+      category->{
+        title
+      },
       thumbnail {
         asset->{
           _id,
@@ -65,17 +119,32 @@ export const getFeaturedArticlesAsync = async (): Promise<Article[]> => {
         hotspot,
         crop
       },
+      mainImage {
+        asset->{
+          _id,
+          _ref,
+          url
+        },
+        alt,
+        hotspot,
+        crop
+      },
       body,
       featured
     }`)
 
+    console.log("📊 Fetched posts count:", posts?.length || 0)
+    console.log("📋 Raw posts data:", JSON.stringify(posts, null, 2))
+
     if (posts && posts.length > 0) {
+      console.log("✅ Processing Sanity posts...")
       return posts.map(transformSanityPost)
     }
   } catch (error) {
-    console.error("Error fetching articles from Sanity:", error)
+    console.error("❌ Error fetching articles from Sanity:", error)
   }
 
+  console.log("⚠️ Using fallback data...")
   // Fallback data
   return [
     {
@@ -112,6 +181,13 @@ export const getLatestArticlesAsync = async (): Promise<Article[]> => {
       title,
       slug,
       publishedAt,
+      excerpt,
+      author->{
+        name
+      },
+      category->{
+        title
+      },
       thumbnail {
         asset->{
           _id,
@@ -123,6 +199,16 @@ export const getLatestArticlesAsync = async (): Promise<Article[]> => {
         crop
       },
       image {
+        asset->{
+          _id,
+          _ref,
+          url
+        },
+        alt,
+        hotspot,
+        crop
+      },
+      mainImage {
         asset->{
           _id,
           _ref,

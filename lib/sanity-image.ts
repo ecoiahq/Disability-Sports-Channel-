@@ -20,14 +20,36 @@ export function urlFor(source: SanityImageSource) {
 
 // Helper to get thumbnail URL with specific dimensions
 export function getThumbnailUrl(imageSource: SanityImageSource | null | undefined, width = 800, height = 450): string {
+  console.log("🔧 getThumbnailUrl called with:", { imageSource, width, height })
+
   if (!imageSource) {
+    console.log("⚠️ No image source provided, using placeholder")
     return "/placeholder.svg"
   }
 
+  // If the imageSource already has a direct URL, use it
+  if (typeof imageSource === "object" && imageSource !== null && "asset" in imageSource) {
+    const asset = (imageSource as any).asset
+    if (asset && asset.url) {
+      console.log("✅ Using direct asset URL:", asset.url)
+      return asset.url
+    }
+  }
+
   try {
-    return urlFor(imageSource).width(width).height(height).fit("crop").crop("center").auto("format").quality(80).url()
+    const url = urlFor(imageSource)
+      .width(width)
+      .height(height)
+      .fit("crop")
+      .crop("center")
+      .auto("format")
+      .quality(80)
+      .url()
+    console.log("✅ Generated thumbnail URL:", url)
+    return url
   } catch (error) {
-    console.error("Error generating thumbnail URL:", error)
+    console.error("❌ Error generating thumbnail URL:", error)
+    console.error("   Image source was:", JSON.stringify(imageSource, null, 2))
     return "/placeholder.svg"
   }
 }
