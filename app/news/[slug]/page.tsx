@@ -17,7 +17,7 @@ interface ArticlePageProps {
 // Disable static generation for now to allow dynamic routing
 export const dynamic = "force-dynamic"
 
-// Enhanced helper function to get image URL from Sanity with CDN URL detection
+// Enhanced helper function to get image URL from Sanity
 function getSanityImageUrl(imageField: any, width = 1200, height = 675): string {
   console.log("🖼️ getSanityImageUrl called with:", { imageField, width, height })
 
@@ -26,17 +26,17 @@ function getSanityImageUrl(imageField: any, width = 1200, height = 675): string 
     return "/placeholder.svg"
   }
 
-  // Method 1: Check if it's already a Sanity CDN URL
+  // Method 1: Check if it's already a direct asset URL
+  if (imageField.asset?.url) {
+    console.log("✅ Using direct asset URL:", imageField.asset.url)
+    return imageField.asset.url
+  }
+
+  // Method 2: Check if it's a string URL (already processed)
   if (typeof imageField === "string") {
-    if (imageField.includes("cdn.sanity.io/images")) {
+    if (imageField.includes("cdn.sanity.io")) {
       console.log("✅ Using existing Sanity CDN URL:", imageField)
-      // Optionally add width and height parameters if needed
-      const url = new URL(imageField)
-      url.searchParams.set("w", width.toString())
-      url.searchParams.set("h", height.toString())
-      url.searchParams.set("fit", "crop")
-      url.searchParams.set("auto", "format")
-      return url.toString()
+      return imageField
     }
 
     // Handle local file paths
@@ -46,63 +46,31 @@ function getSanityImageUrl(imageField: any, width = 1200, height = 675): string 
     }
   }
 
-  // Method 2: Check if it's a Sanity asset reference
-  if (imageField.asset) {
-    // Direct asset URL (most reliable)
-    if (imageField.asset.url) {
-      console.log("✅ Using direct asset URL:", imageField.asset.url)
-      return imageField.asset.url
-    }
-
-    // Build URL manually from asset reference
-    if (imageField.asset._ref && imageField.asset._ref.startsWith("image-")) {
-      const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID
-      const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET || "production"
-
-      if (projectId && dataset) {
-        const assetId = imageField.asset._ref
-        // Parse asset reference: image-{id}-{dimensions}-{format}
-        const match = assetId.match(/image-([a-f\d]+)-(\d+x\d+)-(\w+)/)
-
-        if (match) {
-          const [, id, dimensions, format] = match
-          const manualUrl = `https://cdn.sanity.io/images/${projectId}/${dataset}/${id}-${dimensions}.${format}?w=${width}&h=${height}&fit=crop&auto=format`
-          console.log("✅ Generated manual URL:", manualUrl)
-          return manualUrl
-        } else {
-          console.warn("❌ Invalid asset reference format:", assetId)
-        }
-      }
-    }
-
-    // Use urlFor builder (only for valid Sanity assets)
-    if (urlFor && imageField.asset._ref && imageField.asset._ref.startsWith("image-")) {
-      try {
-        const urlBuilder = urlFor(imageField)
-        if (urlBuilder) {
-          const url = urlBuilder.width(width).height(height).fit("crop").auto("format").url()
-          console.log("✅ Generated URL with urlFor:", url)
-          return url || "/placeholder.svg"
-        }
-      } catch (error) {
-        console.error("❌ Error with urlFor:", error)
-      }
+  // Method 3: Use urlFor builder for Sanity assets
+  if (urlFor && imageField.asset) {
+    try {
+      const url = urlFor(imageField).width(width).height(height).fit("crop").auto("format").url()
+      console.log("✅ Generated URL with urlFor:", url)
+      return url || "/placeholder.svg"
+    } catch (error) {
+      console.error("❌ Error with urlFor:", error)
     }
   }
 
-  // Method 3: If it's a direct Sanity asset object without nested structure
-  if (imageField._ref && imageField._ref.startsWith("image-")) {
+  // Method 4: Build URL manually from asset reference
+  if (imageField.asset?._ref && imageField.asset._ref.startsWith("image-")) {
     const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID
     const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET || "production"
 
     if (projectId && dataset) {
-      const assetId = imageField._ref
+      const assetId = imageField.asset._ref
+      // Parse asset reference: image-{id}-{dimensions}-{format}
       const match = assetId.match(/image-([a-f\d]+)-(\d+x\d+)-(\w+)/)
 
       if (match) {
         const [, id, dimensions, format] = match
         const manualUrl = `https://cdn.sanity.io/images/${projectId}/${dataset}/${id}-${dimensions}.${format}?w=${width}&h=${height}&fit=crop&auto=format`
-        console.log("✅ Generated manual URL from direct ref:", manualUrl)
+        console.log("✅ Generated manual URL:", manualUrl)
         return manualUrl
       }
     }
@@ -194,16 +162,7 @@ async function getArticle(slug: string) {
     console.log(`🔍 Clean slug: "${cleanSlug}"`)
 
     if (sanityConfigured && client) {
-      // First, let's see what posts actually exist
-      const allPosts = await client.fetch(`*[_type == "post"] {
-        _id,
-        title,
-        "slug": slug.current,
-        publishedAt
-      }`)
-      console.log("📋 All available posts:", allPosts)
-
-      // Try to fetch post with comprehensive slug matching
+      // Enhanced query to fetch ALL image fields
       const postQuery = `*[_type == "post" && (
         slug.current == $slug || 
         slug.current == $cleanSlug ||
@@ -215,7 +174,33 @@ async function getArticle(slug: string) {
         slug,
         publishedAt,
         excerpt,
+        thumbnail {
+          asset->{
+            _id,
+            url,
+            metadata {
+              dimensions {
+                width,
+                height
+              }
+            }
+          },
+          alt
+        },
         image {
+          asset->{
+            _id,
+            url,
+            metadata {
+              dimensions {
+                width,
+                height
+              }
+            }
+          },
+          alt
+        },
+        mainImage {
           asset->{
             _id,
             url,
@@ -249,7 +234,7 @@ async function getArticle(slug: string) {
       console.log("📄 Post query result:", post)
 
       if (post) {
-        // Transform post to article format
+        // Transform post to article format with proper image handling
         let excerpt = post.excerpt || "Read more about this story..."
 
         // If no excerpt, extract from body
@@ -265,13 +250,26 @@ async function getArticle(slug: string) {
           }
         }
 
+        // Get the featured image - try thumbnail, image, then mainImage
+        let featuredImage = null
+        if (post.thumbnail?.asset) {
+          featuredImage = post.thumbnail
+          console.log("📸 Using thumbnail for featured image")
+        } else if (post.image?.asset) {
+          featuredImage = post.image
+          console.log("📸 Using image for featured image")
+        } else if (post.mainImage?.asset) {
+          featuredImage = post.mainImage
+          console.log("📸 Using mainImage for featured image")
+        }
+
         return {
           _id: post._id,
           title: post.title,
           slug: post.slug,
           excerpt: excerpt,
           content: post.body,
-          featuredImage: post.image,
+          featuredImage: featuredImage,
           publishedAt: post.publishedAt,
           author: { name: post.author?.name || "Admin" },
           category: { title: post.category?.title || "News" },
@@ -328,30 +326,6 @@ async function getArticle(slug: string) {
       console.log("📰 Article query result:", article)
 
       if (article) return article
-
-      // Check if there are any similar slugs
-      const similarSlugs = await client.fetch(`*[_type == "post" || _type == "article"] {
-        "slug": slug.current,
-        title,
-        _type
-      }`)
-
-      console.log("🔍 All available slugs:", similarSlugs)
-
-      // Try partial matching
-      const partialMatch = similarSlugs.find(
-        (item: any) =>
-          item.slug &&
-          (item.slug.includes(cleanSlug) ||
-            cleanSlug.includes(item.slug) ||
-            item.slug.toLowerCase().includes(cleanSlug.toLowerCase())),
-      )
-
-      if (partialMatch) {
-        console.log("🎯 Found partial match:", partialMatch)
-        // Recursively call with the correct slug
-        return getArticle(partialMatch.slug)
-      }
     }
 
     // Enhanced static fallback with the specific article
