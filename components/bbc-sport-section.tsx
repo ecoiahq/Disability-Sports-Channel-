@@ -14,7 +14,7 @@ async function FeaturedArticlesContent() {
   }
 
   const mainArticle = articles[0]
-  const secondaryArticles = articles.slice(1, 5) // Get up to 4 secondary articles
+  const secondaryArticles = articles.slice(1, 5)
 
   return (
     <div className="grid gap-6 md:grid-cols-4">
@@ -28,6 +28,8 @@ async function FeaturedArticlesContent() {
               width={640}
               height={360}
               className="w-full object-cover transition-transform duration-300 group-hover:scale-105"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 640px"
+              priority
             />
           </div>
           <div className="mt-3">
@@ -51,6 +53,7 @@ async function FeaturedArticlesContent() {
                 width={320}
                 height={180}
                 className="w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 25vw, 320px"
               />
             </div>
             <div className="mt-3">
