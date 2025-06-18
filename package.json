@@ -33,7 +33,7 @@
     "@radix-ui/react-tabs": "latest",
     "@radix-ui/react-toast": "^1.1.5",
     "@radix-ui/react-tooltip": "latest",
-    "@sanity/client": "latest",
+    "@sanity/client": "^7.6.0",
     "@sanity/icons": "latest",
     "@sanity/image-url": "latest",
     "@sanity/types": "latest",
