@@ -97,6 +97,7 @@ export default defineType({
           { title: "Wheelchair Rugby", value: "wheelchair-rugby" },
           { title: "Boccia", value: "boccia" },
           { title: "Goalball", value: "goalball" },
+          { title: "ParalympicsGB", value: "paralympicsgb" },
         ],
       },
     }),
