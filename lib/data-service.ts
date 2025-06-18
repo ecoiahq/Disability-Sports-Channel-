@@ -19,25 +19,32 @@ function transformSanityPost(sanityPost: any): Article {
     }
   }
 
+  // Use excerpt field if available, otherwise extract from body
+  if (sanityPost.excerpt) {
+    excerpt = sanityPost.excerpt
+  }
+
   return {
     id: sanityPost._id,
     title: sanityPost.title,
     excerpt: excerpt,
-    // Use getThumbnailUrl for both 'thumbnail' and 'image' fields
     image: getThumbnailUrl(sanityPost.thumbnail || sanityPost.image, 800, 450),
+    // Use actual publishedAt date from Sanity
     date: new Date(sanityPost.publishedAt).toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
       day: "numeric",
     }),
-    author: "Admin",
-    category: "News",
+    // Use actual author from Sanity, with fallback
+    author: sanityPost.author?.name || sanityPost.author || "Admin",
+    // Use actual category from Sanity, with fallback
+    category: sanityPost.category?.title || sanityPost.category || "News",
     url: `/news/${cleanSlug}`,
-    sportTags: [],
+    sportTags: sanityPost.sportTags || [],
   }
 }
 
-// Enhanced Sanity query to fetch thumbnail field
+// Enhanced Sanity query to fetch all necessary fields including author and category
 export const getFeaturedArticlesAsync = async (): Promise<Article[]> => {
   try {
     const posts = await client.fetch(`*[_type == "post"] | order(publishedAt desc) [0...5] {
@@ -45,6 +52,7 @@ export const getFeaturedArticlesAsync = async (): Promise<Article[]> => {
       title,
       slug,
       publishedAt,
+      excerpt,
       thumbnail {
         asset->{
           _id,
@@ -66,7 +74,14 @@ export const getFeaturedArticlesAsync = async (): Promise<Article[]> => {
         crop
       },
       body,
-      featured
+      featured,
+      author->{
+        name
+      },
+      category->{
+        title
+      },
+      sportTags
     }`)
 
     if (posts && posts.length > 0) {
@@ -112,6 +127,7 @@ export const getLatestArticlesAsync = async (): Promise<Article[]> => {
       title,
       slug,
       publishedAt,
+      excerpt,
       thumbnail {
         asset->{
           _id,
@@ -133,7 +149,14 @@ export const getLatestArticlesAsync = async (): Promise<Article[]> => {
         crop
       },
       body,
-      featured
+      featured,
+      author->{
+        name
+      },
+      category->{
+        title
+      },
+      sportTags
     }`)
 
     if (posts && posts.length > 0) {
